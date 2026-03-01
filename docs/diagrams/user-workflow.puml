@@ -112,11 +112,18 @@ to phone;
 :Phone reads token and
 fetches guest config from API
 (name, room, checkout date);
+:Generate unique hotspot
+SSID + password for guest;
+
+|Hotel Staff\n(Connect)|
+:Enable hotspot on
+the Zuroy phone;
 
 |Guest\n(Go App)|
 :**Phone is now personalized!**
 Shows hotel-branded welcome screen
-with guest name & room number;
+with guest name, room number,
+and hotspot credentials (SSID + password);
 
 ' =============================================
 ' PHASE 6: GUEST USAGE
@@ -149,9 +156,14 @@ fork again
   :Get directions to
   partner locations;
 fork again
+  :Connect personal devices
+  (laptop, tablet) to
+  phone's WiFi hotspot;
+  :View data usage
+  in the app;
+fork again
   :View hotel info
-  (WiFi password,
-  local tips);
+  (local tips);
 fork again
   :Request stay extension
   (pick extra nights or
@@ -186,6 +198,20 @@ if (Stay extension requested?) then (yes)
     with reason;
   endif
 
+else (no)
+endif
+
+' =============================================
+' DATA LIMIT FLOW
+' =============================================
+
+|System\n(API + Devices)|
+if (Hotspot data limit reached?) then (yes)
+  :Disable hotspot;
+  |Guest\n(Go App)|
+  :Notification:
+  "Data limit reached.
+  Contact front desk.";
 else (no)
 endif
 
@@ -230,15 +256,18 @@ else (manual)
 endif
 
 |System\n(API + Devices)|
+:Disable hotspot;
 :Wipe all guest data from phone
-(name, room, service history);
+(name, room, service history,
+hotspot credentials);
 :Phone returns to
 "Ready for next guest" state;
 :Hotel branding stays loaded;
 
 |Guest\n(Go App)|
 :**Phone is reset!**
-Ready for next guest;
+Hotspot off, data wiped,
+ready for next guest;
 
 ' =============================================
 ' ONGOING MONITORING
