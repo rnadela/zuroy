@@ -82,14 +82,23 @@ Explored payment options for guest service ordering:
 | Custom boot screen | No (deprioritized) | Guest rarely reboots. In-app branding is sufficient. |
 | Hotel branding | In-app, loaded from API per hotel | Logo, colors, background customized per hotel. Managed via admin portal. |
 | Provisioning | USB NFC writer (NDEF) at front desk | Physical tap maps to guest assignment; simple and reliable |
-| Zuroy Portal | Separate app (Zuroy team only) | Fleet + partner management, separate from hotel operations |
-| Zuroy Connect | Next.js | Hotel staff webapp. Consistent with existing skills |
-| Zuroy Go | React Native | Guest app. JS/TS shared knowledge, good NFC plugin ecosystem |
+| Zuroy Portal | Next.js (App Router) + MUI + Tailwind | Internal admin webapp. Same stack as Algonitiv ERP. |
+| Zuroy Connect | Next.js (App Router) + MUI + Tailwind | Hotel staff webapp. Same stack as Algonitiv ERP. |
+| Zuroy Go | Expo + React Native | Guest app (Android). Expo for dev tooling, EAS for builds. |
 | Zuroy Grow | Next.js (Phase 3) | Partner self-service portal. Deferred. |
-| Backend | NestJS + PostgreSQL + Prisma | Same as StockFlow, proven patterns |
+| Backend | NestJS (TypeScript) | REST API, modular architecture, same as Algonitiv ERP |
+| Database | PostgreSQL + Prisma | Type-safe ORM, shared schema in packages/database |
+| Cache / Queue | Redis + BullMQ | JWT blacklist, caching, guaranteed event delivery with DLQ |
+| Auth | JWT + RBAC | 3 role tiers: super-admin, hotel staff, device. Redis token blacklist. |
+| Email | SendGrid | Transactional emails (alerts, notifications) |
+| Monorepo | Turborepo | Simpler than Nx, proven in ERP project |
+| UI (web) | MUI + Tailwind CSS | MUI components + Tailwind for layout/spacing |
+| Testing (web) | Vitest + Playwright | Unit/integration + E2E for web apps |
+| Testing (mobile) | Vitest + Detox | Unit via React Native Testing Library. E2E via Detox (Android emulator). |
+| Deployment | Docker + DigitalOcean + Terraform + GitHub Actions | Same infra pattern as Algonitiv ERP |
 | Door locks | Phase 2 via Seam API | MVP focuses on guest phone experience |
 | Lock vendors to evaluate | Salto KS, Dormakaba Confidant | REST APIs, Seam integration, mid-market pricing |
-| Repo structure | New monorepo (pnpm workspace) | apps/api, apps/web, apps/admin, apps/mobile, packages/ |
+| Repo structure | Turborepo monorepo | apps/api, apps/portal, apps/connect, apps/go, packages/* |
 | Target hotel size | All sizes (5-room to 100+) | Multi-property from day 1 |
 | Service menu | Customizable per hotel | Each property configures its own services/items |
 | Guest auth | NFC provisioning = auth | Physical possession of provisioned phone = authorization |
@@ -198,28 +207,53 @@ Explored payment options for guest service ordering:
 - Billing/subscription management for boosted placements
 - Next.js app (apps/grow/)
 
+## Tech Stack
+
+Same stack as Algonitiv ERP — shared knowledge, proven patterns.
+
+| Layer | Technology | Notes |
+|---|---|---|
+| **Backend** | NestJS (TypeScript) | Modular architecture, REST API, guards/interceptors |
+| **Web apps** | Next.js (App Router, TypeScript) | Portal + Connect + Grow |
+| **Mobile** | Expo + React Native | Zuroy Go (Android). Expo for dev tooling, EAS for builds. |
+| **Database** | PostgreSQL + Prisma | Type-safe ORM, shared schema in `packages/database` |
+| **Cache** | Redis | API caching, JWT token blacklist, refresh tokens |
+| **Queue** | BullMQ (Redis-backed) | Guaranteed event delivery, 3 retries, DLQ, Bull Board UI |
+| **UI (web)** | MUI + Tailwind CSS | MUI components + Tailwind for layout/spacing/colors |
+| **Auth** | JWT + RBAC | 3 tiers: super-admin, hotel staff, device. Redis blacklist. |
+| **Email** | SendGrid | Transactional emails (alerts, notifications) |
+| **Monorepo** | Turborepo | Build orchestration, caching, task pipelines |
+| **Testing (web)** | Vitest + Playwright | Unit/integration + E2E for web apps |
+| **Testing (mobile)** | Vitest + Detox | Unit via React Native Testing Library. E2E via Detox (Android emulator). |
+| **Deployment** | Docker + DigitalOcean + Terraform | Docker Compose (dev), Terraform (prod), GitHub Actions (CI/CD) |
+| **Validation** | Zod or class-validator | Shared schemas between frontend + backend |
+| **Audit** | Generic audit service | All mutations logged: actor, action, entity, before/after diff |
+
 ## Architecture
 
 ```
 [Zuroy Portal]                          [Zuroy Connect]
+  Next.js + MUI + Tailwind               Next.js + MUI + Tailwind
   (fleet, partners, branding)            (reservations, check-in/out)
          |                                      |
          v                                      v
-    [Zuroy API] <------ shared backend -------->+
-         |                                      |
-         v                                      v
-    [PostgreSQL]              [USB NFC Writer] --NDEF--> [Android Phone]
+    [Zuroy API — NestJS] <-- shared REST API -->+
+         |         |                            |
+         v         v                            v
+  [PostgreSQL] [Redis+BullMQ]   [USB NFC Writer] --NDEF--> [Android Phone]
          |                                                     |
          v                                                     v
-    [Android Enterprise MDM]                         [Zuroy Go]
-      - Kiosk lockdown                           - Hotel branding (from API)
-      - Remote wipe                              - Guest welcome + services
-      - OTA updates                              - NFC provisioning listener
-      - Device health                            - Partners directory + map
+    [AMAPI]                                          [Zuroy Go]
+      - Kiosk lockdown                           Expo + React Native
+      - Remote wipe / CLEAR_APP_DATA             - Hotel branding (from API)
+      - OTA via managed Google Play              - Guest welcome + services
+      - Device telemetry                         - NFC provisioning listener
+                                                 - Hotspot (5G/LTE SIM)
+                                                 - Partners directory + map
                                                  - i18n, checkout purge
          |
          v (phase 2)                    [Zuroy Grow] (phase 3)
-    [Seam API] → [NFC Door Locks]         - Partner self-service
+    [Seam API] → [NFC Door Locks]         Next.js — Partner self-service
 ```
 
 ## Monorepo Structure
@@ -230,12 +264,15 @@ zuroy/
 │   ├── api/          # Zuroy API — NestJS backend (shared by all frontends)
 │   ├── portal/       # Zuroy Portal — Next.js admin (internal)
 │   ├── connect/      # Zuroy Connect — Next.js hotel staff webapp
-│   ├── go/           # Zuroy Go — React Native guest app (Android)
+│   ├── go/           # Zuroy Go — Expo + React Native guest app (Android)
 │   └── grow/         # Zuroy Grow — Next.js partner portal (Phase 3)
 ├── packages/
 │   ├── database/     # Prisma schema & migrations
-│   ├── ui/           # Shared UI components (portal + connect)
-│   └── shared/       # Shared types, utils
+│   ├── ui/           # Shared MUI components (portal + connect)
+│   └── shared/       # Shared types, DTOs, validation, constants
+├── infra/            # Terraform + Dockerfiles
+├── turbo.json        # Turborepo pipeline config
+└── docker-compose.yml # Local dev (PostgreSQL, Redis, API, web apps)
 ```
 
 ## Hardware Requirements
