@@ -23,9 +23,10 @@
 3. Staff taps a bulk Android phone against the **USB NFC writer** connected to their PC
 4. USB writer sends an NDEF payload (provisioning token) to the phone
 5. Guest app reads the NFC tag, calls backend API with the token to fetch full guest config
-6. Phone now shows: hotel-branded welcome screen, room info, service ordering
-7. At checkout, guest returns phone → app data is purged (auto at checkout time + manual staff trigger)
-8. Phone is ready for next guest (app stays installed, all guest data wiped)
+6. Staff enables hotspot on the phone (auto-generated SSID + password)
+7. Phone now shows: hotel-branded welcome screen, room info, hotspot credentials, service ordering
+8. At checkout, guest returns phone → hotspot disabled, app data purged (auto at checkout time + manual staff trigger)
+9. Phone is ready for next guest (app stays installed, hotspot off, all guest data wiped)
 
 ## Device Lifecycle (Zuroy Admin)
 
@@ -76,6 +77,8 @@ Explored payment options for guest service ordering:
 | App names | Zuroy Portal (admin), Zuroy Connect (hotel staff), Zuroy Go (guest), Zuroy Grow (partner, Phase 3) | "Zuroy [Verb/Role]" naming pattern |
 | Guest device | Bulk Android phone (not tablet) | Portable, handed out at check-in, returned at checkout |
 | Device lockdown | MDM kiosk mode (Android Enterprise) | Stock Android, locked to Zuroy app. No OS modification. |
+| MDM provider | AMAPI direct (day 1) | Free, full REST API, Zuroy qualifies as commercial EMM. Apply for EMM partnership early. Fallback: Headwind MDM. |
+| Guest checkout wipe | AMAPI `CLEAR_APP_DATA` | Wipes app data only, no factory reset. Phone stays enrolled and ready. |
 | Custom boot screen | No (deprioritized) | Guest rarely reboots. In-app branding is sufficient. |
 | Hotel branding | In-app, loaded from API per hotel | Logo, colors, background customized per hotel. Managed via admin portal. |
 | Provisioning | USB NFC writer (NDEF) at front desk | Physical tap maps to guest assignment; simple and reliable |
@@ -92,7 +95,10 @@ Explored payment options for guest service ordering:
 | Guest auth | NFC provisioning = auth | Physical possession of provisioned phone = authorization |
 | Checkout purge | App data wipe only | Clear guest config, service history, cached data. App stays installed. |
 | Purge trigger | Auto at checkout time + manual staff trigger | Both: scheduled auto-purge + staff override via webapp |
-| Offline mode | Not needed (always online) | WiFi/cellular assumed available |
+| Connectivity | 5G/LTE SIM in each device | Primary internet via cellular. Hotspot shares this connection with guest's personal devices. |
+| Guest hotspot | Staff-enabled at check-in | Auto-generated SSID + password per guest. Shown on welcome screen. Disabled at checkout. |
+| Hotspot data limit | Configurable per hotel | Hotel sets daily/stay data cap. Hotspot disabled + guest notified when limit reached. |
+| Offline mode | Not needed (always online) | Cellular SIM ensures always-on connectivity. |
 | i18n | Full internationalization from start | Multi-language guest UI built in from day 1 |
 | Android devices | Bulk Android 9+ with NFC | Samsung Galaxy A-series or similar |
 | Payments (guest app) | Charge to room — no in-app payment | All service orders billed to room. Guest settles at checkout via hotel's own POS. |
@@ -130,6 +136,7 @@ Explored payment options for guest service ordering:
 - Room charge summary: view itemized charges per guest/room for checkout billing
 - Dashboard with occupancy overview
 - USB NFC writer integration (write NDEF provisioning tokens)
+- **Hotspot management**: enable hotspot during check-in provisioning. View/disable hotspot per device. Configure data limits per hotel.
 
 ### Zuroy Go (Guest — Android Phone)
 - MDM kiosk mode: fullscreen, no Android UI visible
@@ -152,7 +159,8 @@ Explored payment options for guest service ordering:
   - Categories: Car Rentals, Tours & Activities, Restaurants, Spas & Wellness, Shopping & Souvenirs, Delicacy Stores, Nightlife, Cultural Sites, Transportation, Other
   - Empty categories auto-hidden
 - **Dashboard — Boosted Partners carousel**: horizontal scrollable carousel of 3-6 featured partner cards, set by Zuroy admin per hotel region. Tap card → partner detail view.
-- Hotel info: WiFi credentials, local recommendations
+- **Hotspot info**: welcome screen shows auto-generated SSID + password. Guest connects personal devices (laptop, tablet, etc.). Data usage indicator visible in app. Notification when data limit reached + hotspot disabled.
+- Hotel info: local recommendations
 - **Checkout purge**: wipes all guest data on command from backend or at scheduled checkout time
 - Full i18n (multi-language guest UI)
 
@@ -173,6 +181,7 @@ Explored payment options for guest service ordering:
 - Checkout purge: send wipe command (manual + scheduled)
 - MDM integration: Android Enterprise API for kiosk policy, remote wipe, OTA
 - Device health ingestion (periodic heartbeat from guest app)
+- **Hotspot management**: generate unique SSID/password per provisioning, configure data limits per hotel, track data usage per device/guest, disable hotspot when limit reached + push notification, disable hotspot on checkout purge
 
 ## Future Phases
 
@@ -237,6 +246,113 @@ zuroy/
 | Bulk Android phones | Guest devices | Samsung Galaxy A-series, Android 9+ with NFC |
 | Front desk PC/laptop | Runs hotel staff webapp | Any modern browser |
 
+## Android Management API (AMAPI) — Device Fleet Management
+
+### What is AMAPI
+
+Google's free REST API for enterprise Android device management. Not to be confused with Google Endpoint Management (GEM), which is a Workspace-only product that lacks device owner mode. AMAPI is the underlying API that powers third-party EMMs like Esper, Scalefusion, etc.
+
+- **Cost:** Free. No per-device fees. No Google Workspace requirement.
+- **Default quota:** 500 devices per project (can request increase from Android Enterprise team)
+- **Rate limit:** 1,000 requests per 100 seconds
+- **Auth:** Google service account (OAuth2)
+- **Base URL:** `https://androidmanagement.googleapis.com/v1/`
+
+### Permissible Usage — Zuroy Qualifies
+
+Google's AMAPI terms prohibit "solutions developed and used exclusively for first party in-house applications." However, Zuroy qualifies as a **commercial EMM**:
+
+- Zuroy manages devices **for hotel customers** (external end customers) ✅
+- Hotels are end customers, Zuroy is the EMM provider ✅
+- Zuroy has direct agreements with hotels ✅
+- It's a commercial SaaS platform, not an internal-only tool ✅
+
+The prohibition targets companies managing only their own internal fleet (warehouse scanners, etc.). Zuroy is a SaaS product serving hotel customers — textbook commercial EMM.
+
+**Action items:**
+1. Apply for [Android Enterprise EMM partnership](https://emm.androidenterprise.dev/s/) early (free, no cost)
+2. Create a GCP project, try the AMAPI, get a Project ID
+3. Register at Partner Portal → "Apply for communities" → paste Project ID
+4. Build on AMAPI from day 1
+5. **Fallback if denied:** Headwind MDM (open-source, self-hosted, free)
+
+### Kiosk Mode (Dedicated Device Lockdown)
+
+AMAPI supports `installType: "KIOSK"` which auto-launches a single app fullscreen on boot. All escape routes can be disabled via policy:
+
+- Safe boot, factory reset, nav bar, status bar, settings access, camera, app install/uninstall — all lockable
+- Guest never sees stock Android UI — only Zuroy Go
+- Policy is JSON-based, applied per device or per enrollment token
+
+**How this maps to Zuroy:** Each hotel gets a policy with Zuroy Go as the kiosk app. Policy applied at enrollment time via token. Zuroy Portal creates/manages policies via AMAPI REST calls.
+
+### Remote Wipe — Two Options
+
+| Command | What it does | Use case |
+|---|---|---|
+| `RESET_PASSWORD` + factory reset | Full device wipe, re-enrollment needed | Lost/stolen device |
+| **`CLEAR_APP_DATA`** | Wipes only app data, device stays enrolled, app stays installed | **Guest checkout** |
+
+`CLEAR_APP_DATA` is exactly what Zuroy needs. Clears Zuroy Go's guest data (name, room, service history, cached config) without factory resetting. Phone is immediately ready for next guest. Requires Android 9+.
+
+**How this maps to Zuroy:** At checkout (manual staff trigger or auto-purge), Zuroy API calls AMAPI `devices.issueCommand` with `CLEAR_APP_DATA`. Phone resets to "awaiting provisioning" state. NFC tap at next check-in re-provisions it.
+
+### OTA App Updates (Silent)
+
+Publish Zuroy Go as a **private app on managed Google Play** (free, ~10 min publish time). Set `autoUpdateMode: "AUTO_UPDATE_HIGH_PRIORITY"` in the policy. Updates push silently to all enrolled devices — no user interaction needed.
+
+**How this maps to Zuroy:** Deploy new Zuroy Go versions by publishing to managed Google Play. All hotel devices auto-update. Zuroy Portal can track which devices have which app version via telemetry.
+
+### Device Health / Telemetry
+
+AMAPI exposes rich telemetry via `GET /devices/{id}`:
+
+| Data | Available |
+|---|---|
+| Last seen time | Yes |
+| Battery level / power events | Yes |
+| Hardware temperatures | Yes |
+| Memory / storage usage | Yes |
+| Network info (WiFi/cellular) | Yes |
+| Installed app versions | Yes |
+| App events (install/update/remove) | Yes |
+| Security posture | Yes |
+| Policy compliance status | Yes |
+
+Enable via `statusReportingSettings` in the device policy.
+
+**How this maps to Zuroy:** Zuroy Portal fleet health dashboard pulls from AMAPI telemetry. Device health heartbeat in Zuroy Go is supplementary — AMAPI already provides most of what's needed.
+
+### Device Enrollment (50-500 phones)
+
+**QR code enrollment** is the practical path:
+1. Create a reusable enrollment token via AMAPI (includes policy, WiFi config)
+2. Generate QR code from the token
+3. Factory reset each phone → scan QR on setup screen
+4. Phone auto-enrolls, installs Zuroy Go, locks to kiosk mode
+5. ~3-5 min per device, assembly-line style
+
+**Zero-touch enrollment** (better at scale 500+): Requires purchasing devices from authorized resellers who pre-register them. Phones auto-enroll on first boot with no manual steps.
+
+### No Native Device Groups
+
+AMAPI has no group/OU concept. Device-to-hotel mapping lives in Zuroy's own database. AMAPI is the enforcement layer only — Zuroy Portal is the management layer.
+
+### NFC Provisioning is Separate
+
+The NFC tap at check-in (USB writer → phone) is entirely app-level logic in Zuroy Go. AMAPI handles device enrollment and policy enforcement. These are two separate concerns:
+
+| Concern | Handled by |
+|---|---|
+| Device enrollment, kiosk lock, remote wipe, OTA | AMAPI |
+| Guest provisioning (NFC tap → fetch config) | Zuroy Go app + Zuroy API |
+
+### Decision
+
+**AMAPI direct from day 1.** Free, full REST API, rich telemetry, kiosk mode, `CLEAR_APP_DATA` for guest checkout. Zuroy Portal integrates AMAPI for all fleet management. Apply for EMM partnership early. Fallback: Headwind MDM (open-source, self-hosted).
+
 ## Open Questions
 
-*All resolved — ready for planning.*
+- `CLEAR_APP_DATA` latency — how fast does the wipe command execute on-device?
+- Should Zuroy subscribe to AMAPI Pub/Sub for enrollment/compliance events vs polling?
+- Max 2 GCP projects per developer — sufficient for prod + staging?
