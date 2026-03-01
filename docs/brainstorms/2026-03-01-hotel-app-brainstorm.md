@@ -95,6 +95,7 @@ Explored payment options for guest service ordering:
 | UI (web) | MUI + Tailwind CSS | MUI components + Tailwind for layout/spacing |
 | Testing (web) | Vitest + Playwright | Unit/integration + E2E for web apps |
 | Testing (mobile) | Vitest + Detox | Unit via React Native Testing Library. E2E via Detox (Android emulator). |
+| Test coverage | 100% across all apps | CI blocks merge if any app drops below 100%. No exceptions. |
 | Deployment | Docker + DigitalOcean + Terraform + GitHub Actions | Same infra pattern as Algonitiv ERP |
 | Door locks | Phase 2 via Seam API | MVP focuses on guest phone experience |
 | Lock vendors to evaluate | Salto KS, Dormakaba Confidant | REST APIs, Seam integration, mid-market pricing |
@@ -225,6 +226,7 @@ Same stack as Algonitiv ERP — shared knowledge, proven patterns.
 | **Monorepo** | Turborepo | Build orchestration, caching, task pipelines |
 | **Testing (web)** | Vitest + Playwright | Unit/integration + E2E for web apps |
 | **Testing (mobile)** | Vitest + Detox | Unit via React Native Testing Library. E2E via Detox (Android emulator). |
+| **Test coverage** | 100% all apps | API, Portal, Connect, Go. CI blocks merge if below 100%. |
 | **Deployment** | Docker + DigitalOcean + Terraform | Docker Compose (dev), Terraform (prod), GitHub Actions (CI/CD) |
 | **Validation** | Zod or class-validator | Shared schemas between frontend + backend |
 | **Audit** | Generic audit service | All mutations logged: actor, action, entity, before/after diff |
