@@ -1,0 +1,260 @@
+@startuml Zuroy Hotel Platform — Complete User Workflow
+
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam swimlaneWidth 280
+skinparam activityFontSize 13
+skinparam noteFontSize 11
+skinparam titleFontSize 20
+skinparam swimlaneTitleFontSize 16
+
+title Zuroy Hotel Platform — Complete User Workflow
+
+|#E8F5E9| Zuroy Team\n(Portal) |
+|#E3F2FD| Hotel Staff\n(Connect) |
+|#FFF3E0| Guest\n(Go App) |
+|#F3E5F5| System\n(API + Devices) |
+
+' =============================================
+' PHASE 1: HOTEL ONBOARDING
+' =============================================
+
+|Zuroy Team\n(Portal)|
+start
+:**1. HOTEL ONBOARDING**;
+:Create new hotel in Portal
+(name, address, contact);
+:Upload hotel branding
+(logo, colors, background image);
+:Configure service menu
+(room service, housekeeping,
+spa, maintenance, etc.);
+
+' =============================================
+' PHASE 2: DEVICE SETUP
+' =============================================
+
+:**2. DEVICE FLEET SETUP**;
+:Purchase bulk Android phones
+(Samsung Galaxy A-series, NFC-enabled);
+
+|System\n(API + Devices)|
+:Enroll phones in
+Android Enterprise MDM;
+:Install Zuroy Go app
+on all phones;
+:Lock phones to kiosk mode
+(only Zuroy app visible);
+
+|Zuroy Team\n(Portal)|
+:Assign phones to hotel
+in Portal;
+
+|System\n(API + Devices)|
+:Phones download hotel branding
+(logo, colors, background)
+from API;
+
+|Zuroy Team\n(Portal)|
+:Ship phones to hotel;
+:Monitor fleet health
+(battery, connectivity,
+app version, last seen);
+
+' =============================================
+' PHASE 3: HOTEL SETUP
+' =============================================
+
+|Hotel Staff\n(Connect)|
+:**3. HOTEL ROOM SETUP**;
+:Log in to Zuroy Connect
+(hotel staff webapp);
+:Set up rooms
+(room types, numbers, floors);
+:Add hotel amenities
+(dining, pool, spa, gym, etc.
+with photos, hours, GPS location);
+:Connect USB NFC Writer
+to front desk computer;
+
+' =============================================
+' PHASE 4: PARTNER SETUP
+' =============================================
+
+|Zuroy Team\n(Portal)|
+:**4. PARTNERS SETUP**;
+:Add local partner businesses
+(car rentals, tours, restaurants,
+shops, spas, nightlife, etc.);
+:Set boosted/featured partners
+per hotel region
+(paid placement on guest dashboard);
+
+' =============================================
+' PHASE 5: GUEST CHECK-IN
+' =============================================
+
+|Hotel Staff\n(Connect)|
+:**5. GUEST CHECK-IN**;
+:Guest arrives at front desk;
+:Create reservation
+(guest name, dates, room type);
+:Assign room to guest;
+:Pick up a Zuroy phone
+from the stack;
+:Tap phone against
+USB NFC Writer;
+
+|System\n(API + Devices)|
+:NFC Writer sends
+provisioning token
+to phone;
+:Phone reads token and
+fetches guest config from API
+(name, room, checkout date);
+
+|Guest\n(Go App)|
+:**Phone is now personalized!**
+Shows hotel-branded welcome screen
+with guest name & room number;
+
+' =============================================
+' PHASE 6: GUEST USAGE
+' =============================================
+
+:**6. GUEST USES PHONE**;
+
+fork
+  :Browse hotel amenities
+  (by category or on map);
+  :Tap amenity for details
+  (photos, hours, location);
+  :Get walking directions
+  via Google Maps;
+fork again
+  :Order room service
+  or request housekeeping;
+  note right
+    All charges go to
+    the room bill.
+    No credit card needed
+    on the phone.
+  end note
+fork again
+  :Browse local partners
+  (tours, car rentals,
+  restaurants, shops);
+  :View featured partners
+  on dashboard carousel;
+  :Get directions to
+  partner locations;
+fork again
+  :View hotel info
+  (WiFi password,
+  local tips);
+fork again
+  :Request stay extension
+  (pick extra nights or
+  new checkout date);
+end fork
+
+' =============================================
+' STAY EXTENSION FLOW
+' =============================================
+
+if (Stay extension requested?) then (yes)
+
+  |Hotel Staff\n(Connect)|
+  :Receive stay extension
+  request notification;
+
+  if (Approve extension?) then (yes)
+    :Approve request;
+    |System\n(API + Devices)|
+    :Update checkout date;
+    :Reschedule auto-purge;
+    |Guest\n(Go App)|
+    :Receive notification:
+    "Extension approved!"
+    New checkout date shown;
+  else (no)
+    |Hotel Staff\n(Connect)|
+    :Reject with reason;
+    |Guest\n(Go App)|
+    :Receive notification:
+    "Extension declined"
+    with reason;
+  endif
+
+else (no)
+endif
+
+' =============================================
+' SERVICE REQUEST FLOW
+' =============================================
+
+|System\n(API + Devices)|
+:**7. SERVICE REQUEST HANDLING**;
+
+|Hotel Staff\n(Connect)|
+:View incoming service requests
+on dashboard;
+:Acknowledge request;
+:Mark as "in progress";
+:Mark as "complete";
+:Charges added to
+guest's room bill;
+
+' =============================================
+' PHASE 8: GUEST CHECKOUT
+' =============================================
+
+|Hotel Staff\n(Connect)|
+:**8. GUEST CHECKOUT**;
+:Guest returns phone
+to front desk;
+:Review room charge summary
+(itemized list of all charges);
+:Guest settles bill at
+hotel's existing payment system
+(POS / card terminal);
+
+if (Checkout time reached?) then (auto)
+  |System\n(API + Devices)|
+  :Auto-purge triggers at
+  scheduled checkout time;
+else (manual)
+  |Hotel Staff\n(Connect)|
+  :Press "Checkout" button
+  to trigger purge;
+endif
+
+|System\n(API + Devices)|
+:Wipe all guest data from phone
+(name, room, service history);
+:Phone returns to
+"Ready for next guest" state;
+:Hotel branding stays loaded;
+
+|Guest\n(Go App)|
+:**Phone is reset!**
+Ready for next guest;
+
+' =============================================
+' ONGOING MONITORING
+' =============================================
+
+|Zuroy Team\n(Portal)|
+:**ONGOING MONITORING**;
+:View usage analytics
+(check-ins, service volumes);
+:Monitor device health
+across all hotels;
+:Push app updates
+remotely via MDM;
+:Remotely wipe devices
+if lost or stolen;
+
+stop
+
+@enduml
