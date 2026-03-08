@@ -53,6 +53,16 @@ zuroy/
 └── docker-compose.yml
 ```
 
+## Code Generation
+
+- Always use library/framework CLIs instead of manually creating files.
+  - `nest generate` for modules, controllers, services, guards, pipes, etc.
+  - `prisma migrate dev`, `prisma generate` for migrations and client
+  - `expo` CLI for React Native scaffolding
+  - `npx create-next-app`, `next` CLI where applicable
+  - `turbo gen` for workspace packages
+- Only create files manually when no CLI exists for the task.
+
 ## Git
 
 - Always commit directly to `main` unless user specifies a different branch.
