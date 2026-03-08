@@ -53,6 +53,10 @@ zuroy/
 └── docker-compose.yml
 ```
 
+## Git
+
+- Always commit directly to `main` unless user specifies a different branch.
+
 ## Key Concepts
 
 - **NFC provisioning:** USB NFC writer at front desk writes NDEF token to guest phone. App fetches config from API.
