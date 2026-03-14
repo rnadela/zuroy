@@ -4,13 +4,13 @@ Hotel operations platform. Four apps in a Turborepo monorepo.
 
 ## Apps
 
-| App | Stack | Purpose |
-|---|---|---|
-| `apps/api` | NestJS | Shared REST API, multi-property tenancy |
-| `apps/portal` | Next.js (App Router) + MUI + Tailwind | Internal admin (fleet, partners, branding) |
-| `apps/connect` | Next.js (App Router) + MUI + Tailwind | Hotel staff (reservations, check-in/out, NFC) |
-| `apps/go` | Expo + React Native | Android guest app (kiosk mode, hotel branding) |
-| `apps/grow` | Next.js (Phase 3) | Partner self-service portal |
+| App            | Stack                                 | Purpose                                        |
+| -------------- | ------------------------------------- | ---------------------------------------------- |
+| `apps/api`     | NestJS                                | Shared REST API, multi-property tenancy        |
+| `apps/portal`  | Next.js (App Router) + MUI + Tailwind | Internal admin (fleet, partners, branding)     |
+| `apps/connect` | Next.js (App Router) + MUI + Tailwind | Hotel staff (reservations, check-in/out, NFC)  |
+| `apps/go`      | Expo + React Native                   | Android guest app (kiosk mode, hotel branding) |
+| `apps/grow`    | Next.js (Phase 3)                     | Partner self-service portal                    |
 
 ## Packages
 
