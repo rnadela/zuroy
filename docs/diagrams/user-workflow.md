@@ -284,10 +284,10 @@ flowchart TD
 
 ## Legend
 
-| Color | Actor | App |
-|-------|-------|-----|
-| Green | Zuroy Team | Portal |
-| Blue | Hotel Staff | Connect |
-| Orange | Guest | Go App |
-| Purple | System | API + Devices |
-| Yellow | Decision points | — |
+| Color  | Actor           | App           |
+| ------ | --------------- | ------------- |
+| Green  | Zuroy Team      | Portal        |
+| Blue   | Hotel Staff     | Connect       |
+| Orange | Guest           | Go App        |
+| Purple | System          | API + Devices |
+| Yellow | Decision points | —             |

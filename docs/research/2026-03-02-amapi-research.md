@@ -30,6 +30,7 @@
 **What AMAPI is:** A free REST API from Google for building Enterprise Mobility Management (EMM) solutions. It manages Android devices via JSON-based policies. A companion app (Android Device Policy) enforces policies on-device — no native Android development required.
 
 **What it supports:**
+
 - Fully managed devices (company-owned, full control)
 - Dedicated devices (single-purpose kiosk mode) — this is the Zuroy use case
 - Work profiles (BYOD) — not relevant to Zuroy
@@ -42,16 +43,17 @@
 
 ## 2. Cost & Licensing
 
-| Item | Cost |
-|---|---|
-| AMAPI itself | **Free** |
-| Android Device Policy app | Free (auto-installed during enrollment) |
-| Managed Google Play | Free |
-| Private app hosting | Free (no $25 Play Console fee when published via managed Google Play iframe) |
-| Google Cloud project | Free (API calls within quota) |
-| Google Workspace | **Not required** |
+| Item                      | Cost                                                                         |
+| ------------------------- | ---------------------------------------------------------------------------- |
+| AMAPI itself              | **Free**                                                                     |
+| Android Device Policy app | Free (auto-installed during enrollment)                                      |
+| Managed Google Play       | Free                                                                         |
+| Private app hosting       | Free (no $25 Play Console fee when published via managed Google Play iframe) |
+| Google Cloud project      | Free (API calls within quota)                                                |
+| Google Workspace          | **Not required**                                                             |
 
 **Quotas:**
+
 - Default: **500 devices** per project (hard-enforced)
 - Exceeding 500: requires formal application to Android Enterprise team via [response form](https://goo.gle/android-enterprise-response)
 - API rate limit: 1,000 requests per 100 seconds per project
@@ -64,11 +66,13 @@
 ## 3. Permissible Usage — CRITICAL ISSUE
 
 **Who can use AMAPI (per Google's policy):**
+
 1. Commercial EMM developers (building MDM solutions sold to external customers)
 2. Device Trust solution providers (IDPs, MTDs, EDRs, SIEM)
 3. OEMs (for enterprise features only)
 
 **Explicitly prohibited:**
+
 - "Solutions developed and used exclusively for first party in-house applications"
 - Device financing solutions
 - User monitoring/surveillance tools
@@ -82,6 +86,7 @@ Zuroy is a SaaS platform managing devices **for hotel customers** (not purely in
 - **Argument AGAINST:** Zuroy owns the devices. Zuroy is the EMM and the end-user. Google may view this as first-party use disguised as a commercial product.
 
 **Mitigation paths:**
+
 1. **Apply for Android Enterprise partnership** — register as an EMM provider, validate the solution for "commercial availability." If approved, quota lifts to negotiated limits and permissible use is cleared.
 2. **Structure Zuroy as a device-management SaaS** — hotels are the "customers," Zuroy is the "EMM provider." This is arguably what Zuroy already is.
 3. **Use Esper for MVP, migrate later** — Esper is itself built on AMAPI and is an approved EMM partner. Using Esper initially avoids the permissible-use question entirely.
@@ -116,25 +121,25 @@ https://androidmanagement.googleapis.com/v1
 
 ### Key Endpoints
 
-| Resource | Method | Endpoint | Purpose |
-|---|---|---|---|
-| **Enterprises** | POST | `/v1/enterprises` | Create enterprise binding |
-| | GET | `/v1/{name=enterprises/*}` | Get enterprise |
-| **Policies** | PATCH | `/v1/{name=enterprises/*/policies/*}` | Create or update policy |
-| | GET | `/v1/{name=enterprises/*/policies/*}` | Get policy |
-| | DELETE | `/v1/{name=enterprises/*/policies/*}` | Delete policy |
-| **Enrollment Tokens** | POST | `/v1/{parent=enterprises/*}/enrollmentTokens` | Create enrollment token |
-| | GET | `/v1/{name=enterprises/*/enrollmentTokens/*}` | Get token |
-| | LIST | `/v1/{parent=enterprises/*}/enrollmentTokens` | List tokens |
-| | DELETE | `/v1/{name=enterprises/*/enrollmentTokens/*}` | Revoke token |
-| **Devices** | GET | `/v1/{name=enterprises/*/devices/*}` | Get device details + telemetry |
-| | LIST | `/v1/{parent=enterprises/*}/devices` | List all devices |
-| | PATCH | `/v1/{name=enterprises/*/devices/*}` | Update device (change policy, etc.) |
-| | DELETE | `/v1/{name=enterprises/*/devices/*}` | Unenroll/delete device |
-| | POST | `/v1/{name=enterprises/*/devices/*}:issueCommand` | Remote wipe, lock, reboot, clear app data |
-| **Applications** | GET | `/v1/{name=enterprises/*/applications/*}` | Get app metadata + tracks |
-| **Web Apps** | POST | `/v1/{parent=enterprises/*}/webApps` | Create web app |
-| **Web Tokens** | POST | `/v1/{parent=enterprises/*}/webTokens` | Token for managed Google Play iframe |
+| Resource              | Method | Endpoint                                          | Purpose                                   |
+| --------------------- | ------ | ------------------------------------------------- | ----------------------------------------- |
+| **Enterprises**       | POST   | `/v1/enterprises`                                 | Create enterprise binding                 |
+|                       | GET    | `/v1/{name=enterprises/*}`                        | Get enterprise                            |
+| **Policies**          | PATCH  | `/v1/{name=enterprises/*/policies/*}`             | Create or update policy                   |
+|                       | GET    | `/v1/{name=enterprises/*/policies/*}`             | Get policy                                |
+|                       | DELETE | `/v1/{name=enterprises/*/policies/*}`             | Delete policy                             |
+| **Enrollment Tokens** | POST   | `/v1/{parent=enterprises/*}/enrollmentTokens`     | Create enrollment token                   |
+|                       | GET    | `/v1/{name=enterprises/*/enrollmentTokens/*}`     | Get token                                 |
+|                       | LIST   | `/v1/{parent=enterprises/*}/enrollmentTokens`     | List tokens                               |
+|                       | DELETE | `/v1/{name=enterprises/*/enrollmentTokens/*}`     | Revoke token                              |
+| **Devices**           | GET    | `/v1/{name=enterprises/*/devices/*}`              | Get device details + telemetry            |
+|                       | LIST   | `/v1/{parent=enterprises/*}/devices`              | List all devices                          |
+|                       | PATCH  | `/v1/{name=enterprises/*/devices/*}`              | Update device (change policy, etc.)       |
+|                       | DELETE | `/v1/{name=enterprises/*/devices/*}`              | Unenroll/delete device                    |
+|                       | POST   | `/v1/{name=enterprises/*/devices/*}:issueCommand` | Remote wipe, lock, reboot, clear app data |
+| **Applications**      | GET    | `/v1/{name=enterprises/*/applications/*}`         | Get app metadata + tracks                 |
+| **Web Apps**          | POST   | `/v1/{parent=enterprises/*}/webApps`              | Create web app                            |
+| **Web Tokens**        | POST   | `/v1/{parent=enterprises/*}/webTokens`            | Token for managed Google Play iframe      |
 
 ### Client Libraries
 
@@ -149,6 +154,7 @@ This is the core Zuroy use case: lock an Android phone to Zuroy Go so the guest 
 ### Single-App Kiosk Mode
 
 Set the app's `installType` to `"KIOSK"` in the policy. The app:
+
 - Launches automatically on boot
 - Runs fullscreen
 - Is pinned (user cannot exit)
@@ -216,16 +222,16 @@ Set the app's `installType` to `"KIOSK"` in the policy. The app:
 
 ### Key Kiosk Fields Explained
 
-| Field | Purpose | Zuroy Value |
-|---|---|---|
-| `installType: "KIOSK"` | Locks device to this single app | Set on Zuroy Go |
-| `kioskCustomization.systemNavigation` | Hide nav bar | `NAVIGATION_DISABLED` |
-| `kioskCustomization.statusBar` | Hide status bar | `NOTIFICATIONS_AND_SYSTEM_INFO_DISABLED` |
-| `kioskCustomization.deviceSettings` | Block settings access | `SETTINGS_ACCESS_BLOCKED` |
-| `keyguardDisabled` | No lock screen | `true` (guest device, no PIN) |
-| `safeBootDisabled` | Prevent safe boot escape | `true` |
-| `factoryResetDisabled` | Prevent guest factory reset | `true` |
-| `maximumTimeToLock: 0` | Never auto-lock | Keeps app always visible |
+| Field                                 | Purpose                         | Zuroy Value                              |
+| ------------------------------------- | ------------------------------- | ---------------------------------------- |
+| `installType: "KIOSK"`                | Locks device to this single app | Set on Zuroy Go                          |
+| `kioskCustomization.systemNavigation` | Hide nav bar                    | `NAVIGATION_DISABLED`                    |
+| `kioskCustomization.statusBar`        | Hide status bar                 | `NOTIFICATIONS_AND_SYSTEM_INFO_DISABLED` |
+| `kioskCustomization.deviceSettings`   | Block settings access           | `SETTINGS_ACCESS_BLOCKED`                |
+| `keyguardDisabled`                    | No lock screen                  | `true` (guest device, no PIN)            |
+| `safeBootDisabled`                    | Prevent safe boot escape        | `true`                                   |
+| `factoryResetDisabled`                | Prevent guest factory reset     | `true`                                   |
+| `maximumTimeToLock: 0`                | Never auto-lock                 | Keeps app always visible                 |
 
 ### Multi-App Kiosk (Not Needed for Zuroy)
 
@@ -276,6 +282,7 @@ POST /v1/enterprises/{enterpriseId}/devices/{deviceId}:issueCommand
 **This is the Zuroy checkout wipe.** Clears Zuroy Go's app data (guest config, cached data, service history) without factory resetting the device. The app stays installed and ready for the next guest.
 
 **Requirements:**
+
 - Android 9+ required
 - Only clears standard app data directory
 - External storage data is NOT cleared by this command
@@ -297,21 +304,21 @@ POST /v1/enterprises/{enterpriseId}/devices/{deviceId}:issueCommand
 
 ### Other Commands
 
-| Command | Use | Android Version |
-|---|---|---|
-| `LOCK` | Lock device screen | All |
-| `REBOOT` | Restart device | 7.0+ |
-| `RESET_PASSWORD` | Reset device password | All |
-| `START_LOST_MODE` | Show custom message + location tracking | Fully managed |
-| `STOP_LOST_MODE` | Exit lost mode | Fully managed |
+| Command           | Use                                     | Android Version |
+| ----------------- | --------------------------------------- | --------------- |
+| `LOCK`            | Lock device screen                      | All             |
+| `REBOOT`          | Restart device                          | 7.0+            |
+| `RESET_PASSWORD`  | Reset device password                   | All             |
+| `START_LOST_MODE` | Show custom message + location tracking | Fully managed   |
+| `STOP_LOST_MODE`  | Exit lost mode                          | Fully managed   |
 
 ### Zuroy Wipe Strategy
 
-| Scenario | Command | Effect |
-|---|---|---|
-| Guest checkout (normal) | `CLEAR_APP_DATA` | Wipes guest data, app stays installed, ready for next guest |
-| Lost/stolen device | `WIPE` | Full factory reset |
-| Device decommission | `DELETE` (device resource) | Unenrolls + wipes |
+| Scenario                | Command                    | Effect                                                      |
+| ----------------------- | -------------------------- | ----------------------------------------------------------- |
+| Guest checkout (normal) | `CLEAR_APP_DATA`           | Wipes guest data, app stays installed, ready for next guest |
+| Lost/stolen device      | `WIPE`                     | Full factory reset                                          |
+| Device decommission     | `DELETE` (device resource) | Unenrolls + wipes                                           |
 
 ---
 
@@ -336,17 +343,18 @@ Set `autoUpdateMode` in the policy's application entry:
 }
 ```
 
-| Mode | Behavior |
-|---|---|
-| `AUTO_UPDATE_DEFAULT` | Updates when device is on Wi-Fi, charging, idle, not in foreground |
-| `AUTO_UPDATE_POSTPONED` | Delays updates up to 90 days |
-| `AUTO_UPDATE_HIGH_PRIORITY` | Updates ASAP, restarts app if running |
+| Mode                        | Behavior                                                           |
+| --------------------------- | ------------------------------------------------------------------ |
+| `AUTO_UPDATE_DEFAULT`       | Updates when device is on Wi-Fi, charging, idle, not in foreground |
+| `AUTO_UPDATE_POSTPONED`     | Delays updates up to 90 days                                       |
+| `AUTO_UPDATE_HIGH_PRIORITY` | Updates ASAP, restarts app if running                              |
 
 **For Zuroy:** Use `AUTO_UPDATE_HIGH_PRIORITY`. When you push a new APK to managed Google Play, all enrolled devices update automatically without any user interaction.
 
 ### Closed Testing Tracks
 
 For staged rollouts:
+
 1. Create a closed test track in Google Play Console
 2. Get track IDs via `enterprises.applications` GET endpoint
 3. Add `accessibleTrackIds` to policy:
@@ -379,22 +387,22 @@ AMAPI exposes rich telemetry per device via `GET /v1/enterprises/{id}/devices/{d
 
 ### Available Telemetry Fields
 
-| Category | Fields | Notes |
-|---|---|---|
-| **Last seen** | `lastStatusReportTime`, `lastPolicySyncTime` | Timestamps of last device check-in |
-| **Battery & power** | `powerManagementEvents[]` | Battery/thermal events chronologically |
-| **Hardware temps** | `hardwareStatusSamples[]` | CPU, GPU, battery, skin temps (requires `hardwareStatusEnabled: true` in policy) |
-| **Memory/storage** | `memoryInfo.totalRam`, `memoryInfo.totalInternalStorage` | Plus `memoryEvents[]` for tracking |
-| **Display** | `displays[]` | Resolution, state (ON/OFF/DOZE), refresh rate |
-| **Network** | `networkInfo` | Telephony + connectivity details |
-| **Software** | `softwareInfo.androidVersion`, `softwareInfo.securityPatchLevel`, `softwareInfo.systemUpdateInfo` | Pending update status |
-| **Hardware** | `hardwareInfo.brand`, `hardwareInfo.model`, `hardwareInfo.serialNumber` | Device identity |
-| **App versions** | `applicationReports[].versionCode`, `applicationReports[].versionName` | Per-app version tracking |
-| **App events** | `applicationReports[].events[]` | Install/update/remove events (30-hour window) |
-| **App states** | `applicationReports[].keyedAppStates[]` | Custom app-reported status with severity |
-| **Policy compliance** | `policyCompliant`, `nonComplianceDetails[]` | Boolean + detailed reasons |
-| **Security** | `securityPosture`, `deviceSettings.encryptionStatus` | Security posture assessment |
-| **Device state** | `state` | ACTIVE, DISABLED, DELETED, PROVISIONING, LOST |
+| Category              | Fields                                                                                            | Notes                                                                            |
+| --------------------- | ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| **Last seen**         | `lastStatusReportTime`, `lastPolicySyncTime`                                                      | Timestamps of last device check-in                                               |
+| **Battery & power**   | `powerManagementEvents[]`                                                                         | Battery/thermal events chronologically                                           |
+| **Hardware temps**    | `hardwareStatusSamples[]`                                                                         | CPU, GPU, battery, skin temps (requires `hardwareStatusEnabled: true` in policy) |
+| **Memory/storage**    | `memoryInfo.totalRam`, `memoryInfo.totalInternalStorage`                                          | Plus `memoryEvents[]` for tracking                                               |
+| **Display**           | `displays[]`                                                                                      | Resolution, state (ON/OFF/DOZE), refresh rate                                    |
+| **Network**           | `networkInfo`                                                                                     | Telephony + connectivity details                                                 |
+| **Software**          | `softwareInfo.androidVersion`, `softwareInfo.securityPatchLevel`, `softwareInfo.systemUpdateInfo` | Pending update status                                                            |
+| **Hardware**          | `hardwareInfo.brand`, `hardwareInfo.model`, `hardwareInfo.serialNumber`                           | Device identity                                                                  |
+| **App versions**      | `applicationReports[].versionCode`, `applicationReports[].versionName`                            | Per-app version tracking                                                         |
+| **App events**        | `applicationReports[].events[]`                                                                   | Install/update/remove events (30-hour window)                                    |
+| **App states**        | `applicationReports[].keyedAppStates[]`                                                           | Custom app-reported status with severity                                         |
+| **Policy compliance** | `policyCompliant`, `nonComplianceDetails[]`                                                       | Boolean + detailed reasons                                                       |
+| **Security**          | `securityPosture`, `deviceSettings.encryptionStatus`                                              | Security posture assessment                                                      |
+| **Device state**      | `state`                                                                                           | ACTIVE, DISABLED, DELETED, PROVISIONING, LOST                                    |
 
 ### Enabling Telemetry in Policy
 
@@ -417,17 +425,17 @@ Add `statusReportingSettings` to your policy (included in the kiosk policy examp
 
 Map AMAPI fields to Zuroy Portal dashboard:
 
-| Portal Display | AMAPI Source |
-|---|---|
-| "Last seen" | `lastStatusReportTime` |
-| "Battery level" | `powerManagementEvents[]` (latest event) |
-| "Online/offline" | Derive from `lastStatusReportTime` (e.g., >15 min = offline) |
-| "App version" | `applicationReports[].versionCode` where `packageName == "com.zuroy.go"` |
-| "OS version" | `softwareInfo.androidVersion` |
-| "Security patch" | `softwareInfo.securityPatchLevel` |
-| "Storage" | `memoryInfo.totalInternalStorage` |
-| "Compliance" | `policyCompliant` |
-| "Pending update" | `softwareInfo.systemUpdateInfo` |
+| Portal Display   | AMAPI Source                                                             |
+| ---------------- | ------------------------------------------------------------------------ |
+| "Last seen"      | `lastStatusReportTime`                                                   |
+| "Battery level"  | `powerManagementEvents[]` (latest event)                                 |
+| "Online/offline" | Derive from `lastStatusReportTime` (e.g., >15 min = offline)             |
+| "App version"    | `applicationReports[].versionCode` where `packageName == "com.zuroy.go"` |
+| "OS version"     | `softwareInfo.androidVersion`                                            |
+| "Security patch" | `softwareInfo.securityPatchLevel`                                        |
+| "Storage"        | `memoryInfo.totalInternalStorage`                                        |
+| "Compliance"     | `policyCompliant`                                                        |
+| "Pending update" | `softwareInfo.systemUpdateInfo`                                          |
 
 ### Custom App States (Keyed App States)
 
@@ -453,6 +461,7 @@ These appear in `applicationReports[].keyedAppStates[]` — useful for Zuroy Por
 **Works on:** Android 7.0+
 
 **Flow:**
+
 1. Zuroy Portal creates an enrollment token via API:
 
 ```http
@@ -472,6 +481,7 @@ POST /v1/enterprises/{enterpriseId}/enrollmentTokens
 6. Device is ready
 
 **Batch process for 50-500 devices:**
+
 - Create one enrollment token (reusable across multiple devices)
 - Set long `duration` (e.g., `"604800s"` = 7 days)
 - Print QR code or display on screen
@@ -483,17 +493,20 @@ POST /v1/enterprises/{enterpriseId}/enrollmentTokens
 **Works on:** Android 8.0+ (Pixel 7.1+)
 
 **How it works:**
+
 1. Purchase devices from an **authorized zero-touch reseller** (e.g., Samsung, Ingram Micro, ScanSource)
 2. Reseller assigns devices to your zero-touch enrollment account (by serial/IMEI)
 3. In the zero-touch enrollment portal, create a configuration pointing to your AMAPI enterprise
 4. When devices power on for the first time, they **automatically** enroll — no manual intervention
 
 **Advantages:**
+
 - True zero-touch: device arrives, power on, it's managed
 - Scales to thousands of devices
 - No physical access needed after purchase
 
 **Disadvantages:**
+
 - Must buy from authorized resellers (limits device choice)
 - Requires portal setup
 - Not available in all countries
@@ -510,12 +523,12 @@ Open on device browser to trigger enrollment. Useful for remote provisioning.
 
 ### Enrollment Token Details
 
-| Parameter | Purpose | Example |
-|---|---|---|
-| `policyName` | Policy applied at enrollment | `enterprises/{id}/policies/zuroy-hotel-kiosk` |
-| `allowPersonalUsage` | Device ownership mode | `PERSONAL_USAGE_DISALLOWED_USERLESS` |
-| `duration` | Token expiry | `"604800s"` (7 days) |
-| `oneTimeOnly` | Single-use token | `false` (reuse for batch) |
+| Parameter            | Purpose                      | Example                                       |
+| -------------------- | ---------------------------- | --------------------------------------------- |
+| `policyName`         | Policy applied at enrollment | `enterprises/{id}/policies/zuroy-hotel-kiosk` |
+| `allowPersonalUsage` | Device ownership mode        | `PERSONAL_USAGE_DISALLOWED_USERLESS`          |
+| `duration`           | Token expiry                 | `"604800s"` (7 days)                          |
+| `oneTimeOnly`        | Single-use token             | `false` (reuse for batch)                     |
 
 **Critical:** If a device enrolls without a valid policy, it enters **quarantine** — all functions blocked. If no policy within 5 minutes, the device factory resets itself.
 
@@ -564,18 +577,22 @@ Name a policy `"default"` — it applies to any newly enrolled device that doesn
 Two approaches:
 
 **Option A: One policy per hotel**
+
 ```
 enterprises/{id}/policies/hotel-marriott-sf
 enterprises/{id}/policies/hotel-hilton-nyc
 enterprises/{id}/policies/hotel-hyatt-miami
 ```
+
 - Pro: granular control per property
 - Con: many policies to manage, policy drift
 
 **Option B: Shared policy + app-level config (Recommended)**
+
 ```
 enterprises/{id}/policies/zuroy-hotel-kiosk  (one policy for all hotels)
 ```
+
 - Hotel-specific config (branding, services) managed at the **app level** via Zuroy API
 - AMAPI policy only handles device lockdown (same for all hotels)
 - Pro: single policy to maintain, app handles differentiation
@@ -618,12 +635,12 @@ POST /v1/enterprises/{enterpriseId}/enrollmentTokens
 
 ### Key Parameters
 
-| Field | Default | Max | Notes |
-|---|---|---|---|
-| `duration` | 1 hour | ~10,000 years | Set long for batch enrollment |
-| `allowPersonalUsage` | — | — | `PERSONAL_USAGE_DISALLOWED_USERLESS` for dedicated devices |
-| `policyName` | — | — | Required; policy applied at enrollment |
-| `oneTimeOnly` | false | — | If true, token can only be used once |
+| Field                | Default | Max           | Notes                                                      |
+| -------------------- | ------- | ------------- | ---------------------------------------------------------- |
+| `duration`           | 1 hour  | ~10,000 years | Set long for batch enrollment                              |
+| `allowPersonalUsage` | —       | —             | `PERSONAL_USAGE_DISALLOWED_USERLESS` for dedicated devices |
+| `policyName`         | —       | —             | Required; policy applied at enrollment                     |
+| `oneTimeOnly`        | false   | —             | If true, token can only be used once                       |
 
 ### Token Lifecycle
 
@@ -639,6 +656,7 @@ POST /v1/enterprises/{enterpriseId}/enrollmentTokens
 ### Zuroy Portal Integration
 
 Zuroy Portal should have a "Provision Devices" page that:
+
 1. Calls `enrollmentTokens.create` with the kiosk policy
 2. Renders the `qrCode` value as a scannable QR
 3. Staff scans with factory-reset phones
@@ -653,22 +671,26 @@ Zuroy Portal should have a "Provision Devices" page that:
 ### How to Achieve Grouping
 
 **Method 1: Multiple policies (one per group)**
+
 - Create `policies/hotel-a`, `policies/hotel-b`
 - Assign devices to the appropriate policy
 - Policy = implicit group membership
 
 **Method 2: Application-level grouping (Recommended for Zuroy)**
+
 - Single AMAPI policy for all devices
 - Zuroy API maintains device-to-hotel mappings
 - Zuroy Portal queries its own DB for "devices at Hotel X"
 - AMAPI is just the enforcement layer
 
 **Method 3: Multiple enterprises**
+
 - Create separate enterprises per hotel or region
 - Provides complete isolation
 - Overkill for Zuroy — adds complexity
 
 **Method 4: Cloud Pub/Sub + metadata**
+
 - Subscribe to enrollment notifications
 - Tag devices in your own system upon enrollment
 - Use device names/IDs as foreign keys in Zuroy DB
@@ -676,6 +698,7 @@ Zuroy Portal should have a "Provision Devices" page that:
 ### Zuroy Approach
 
 Zuroy already tracks device-to-hotel assignments in its own database. AMAPI just needs to:
+
 - Enroll devices
 - Apply the kiosk policy
 - Respond to wipe/update commands
@@ -720,6 +743,7 @@ Grouping logic lives in Zuroy Portal, not AMAPI.
 ### NFC Guest Provisioning (Separate from AMAPI)
 
 NFC provisioning (tap phone on USB writer at check-in) is **not an AMAPI feature**. It's handled entirely in the Zuroy Go app:
+
 1. Zuroy Go listens for NFC/NDEF
 2. Reads provisioning token from NFC tag
 3. Calls Zuroy API with token to fetch guest config
@@ -731,22 +755,22 @@ AMAPI handles device-level management. NFC provisioning is app-level logic.
 
 ## 14. AMAPI vs Esper Comparison
 
-| Capability | AMAPI Direct | Esper |
-|---|---|---|
-| **Cost** | Free | Free tier → ~$2/device/mo |
-| **Kiosk mode** | Yes (KIOSK installType) | Yes (purpose-built) |
-| **Remote wipe** | Yes (WIPE + CLEAR_APP_DATA) | Yes |
-| **App data wipe only** | Yes (CLEAR_APP_DATA) | Yes |
-| **OTA app updates** | Yes (managed Google Play) | Yes (Esper cloud) |
-| **Telemetry** | Rich (battery, network, app versions, etc.) | Rich (better dashboard) |
-| **Device groups** | No native groups | Yes (groups + blueprints) |
-| **Enrollment** | QR code, zero-touch | QR code, zero-touch, template |
-| **Dashboard** | Build your own | Ready-made console |
-| **API quality** | REST, well-documented | REST, well-documented |
-| **Permissible use** | Gray area for Zuroy | No restrictions |
-| **Dev effort** | High (build all UI + logic) | Low (use Esper console + API) |
-| **Vendor lock-in** | Google (Android-native) | Esper (third-party) |
-| **Private apps** | Managed Google Play | Esper cloud upload |
+| Capability             | AMAPI Direct                                | Esper                         |
+| ---------------------- | ------------------------------------------- | ----------------------------- |
+| **Cost**               | Free                                        | Free tier → ~$2/device/mo     |
+| **Kiosk mode**         | Yes (KIOSK installType)                     | Yes (purpose-built)           |
+| **Remote wipe**        | Yes (WIPE + CLEAR_APP_DATA)                 | Yes                           |
+| **App data wipe only** | Yes (CLEAR_APP_DATA)                        | Yes                           |
+| **OTA app updates**    | Yes (managed Google Play)                   | Yes (Esper cloud)             |
+| **Telemetry**          | Rich (battery, network, app versions, etc.) | Rich (better dashboard)       |
+| **Device groups**      | No native groups                            | Yes (groups + blueprints)     |
+| **Enrollment**         | QR code, zero-touch                         | QR code, zero-touch, template |
+| **Dashboard**          | Build your own                              | Ready-made console            |
+| **API quality**        | REST, well-documented                       | REST, well-documented         |
+| **Permissible use**    | Gray area for Zuroy                         | No restrictions               |
+| **Dev effort**         | High (build all UI + logic)                 | Low (use Esper console + API) |
+| **Vendor lock-in**     | Google (Android-native)                     | Esper (third-party)           |
+| **Private apps**       | Managed Google Play                         | Esper cloud upload            |
 
 ---
 

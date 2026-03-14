@@ -1,0 +1,124 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Core Models ────────────────────────────────────
+
+model Hotel {
+  id             String   @id @default(cuid())
+  name           String
+  slug           String   @unique
+  address        String?
+  latitude       Float?   @db.DoublePrecision
+  longitude      Float?   @db.DoublePrecision
+  logoUrl        String?
+  primaryColor   String?
+  secondaryColor String?
+  backgroundUrl  String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  rooms   Room[]
+  devices Device[]
+  staff   User[]
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String   @db.VarChar(60)
+  firstName    String
+  lastName     String
+  role         Role     @default(HOTEL_STAFF)
+  hotelId      String?
+  hotel        Hotel?   @relation(fields: [hotelId], references: [id], onDelete: Restrict)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([hotelId])
+  @@index([role])
+}
+
+enum Role {
+  SUPER_ADMIN
+  HOTEL_STAFF
+}
+
+model Room {
+  id           String        @id @default(cuid())
+  number       String        @db.VarChar(20)
+  floor        Int?
+  type         String?
+  hotelId      String
+  hotel        Hotel         @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+  reservations Reservation[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@unique([hotelId, number])
+}
+
+model Device {
+  id             String       @id @default(cuid())
+  serialNumber   String       @unique
+  deviceModel    String?
+  status         DeviceStatus @default(UNASSIGNED)
+  hotelId        String?
+  hotel          Hotel?       @relation(fields: [hotelId], references: [id], onDelete: Restrict)
+  enrollmentCode String?      @unique
+  lastHeartbeat  DateTime?
+  batteryLevel   Int?
+  appVersion     String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  reservations Reservation[]
+
+  @@index([hotelId, status])
+}
+
+enum DeviceStatus {
+  UNASSIGNED
+  ASSIGNED
+  ONLINE
+  OFFLINE
+  MAINTENANCE
+}
+
+model Reservation {
+  id                         String            @id @default(cuid())
+  guestName                  String
+  guestEmail                 String?
+  guestPhone                 String?
+  hotelId                    String
+  roomId                     String
+  room                       Room              @relation(fields: [roomId], references: [id], onDelete: Restrict)
+  deviceId                   String?
+  device                     Device?           @relation(fields: [deviceId], references: [id], onDelete: SetNull)
+  checkIn                    DateTime
+  checkOut                   DateTime
+  status                     ReservationStatus @default(PENDING)
+  provisioningToken          String?           @unique
+  provisioningTokenExpiresAt DateTime?
+  createdAt                  DateTime          @default(now())
+  updatedAt                  DateTime          @updatedAt
+
+  @@index([hotelId])
+  @@index([roomId, status, checkIn, checkOut])
+  @@index([status])
+  @@index([deviceId])
+}
+
+enum ReservationStatus {
+  PENDING
+  CHECKED_IN
+  CHECKED_OUT
+  CANCELLED
+  NO_SHOW
+}
