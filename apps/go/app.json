@@ -1,0 +1,13 @@
+{
+  "expo": {
+    "name": "Zuroy Go",
+    "slug": "zuroy-go",
+    "version": "0.1.0",
+    "platforms": ["android"],
+    "android": {
+      "package": "com.zuroy.go"
+    },
+    "plugins": ["expo-router", "react-native-nfc-manager"],
+    "scheme": "zuroy-go"
+  }
+}
