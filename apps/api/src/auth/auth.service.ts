@@ -24,23 +24,7 @@ export class AuthService {
     const valid = await bcrypt.compare(dto.password, user.passwordHash);
     if (!valid) throw new UnauthorizedException('Invalid credentials');
 
-    const payload: JwtPayload = {
-      sub: user.id,
-      email: user.email,
-      role: user.role,
-      hotelId: user.hotelId ?? undefined,
-    };
-
-    return {
-      accessToken: this.jwtService.sign(payload),
-      user: {
-        id: user.id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        role: user.role,
-      },
-    };
+    return this.buildAuthResponse(user);
   }
 
   async register(dto: RegisterDto) {
@@ -57,10 +41,21 @@ export class AuthService {
         passwordHash,
         firstName: dto.firstName,
         lastName: dto.lastName,
-        role: 'SUPER_ADMIN',
+        role: 'HOTEL_STAFF',
       },
     });
 
+    return this.buildAuthResponse(user);
+  }
+
+  private buildAuthResponse(user: {
+    id: string;
+    email: string;
+    role: string;
+    hotelId: string | null;
+    firstName: string;
+    lastName: string;
+  }) {
     const payload: JwtPayload = {
       sub: user.id,
       email: user.email,

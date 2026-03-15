@@ -24,9 +24,10 @@ model Hotel {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  rooms   Room[]
-  devices Device[]
-  staff   User[]
+  rooms        Room[]
+  devices      Device[]
+  staff        User[]
+  reservations Reservation[]
 }
 
 model User {
@@ -97,6 +98,7 @@ model Reservation {
   guestEmail                 String?
   guestPhone                 String?
   hotelId                    String
+  hotel                      Hotel             @relation(fields: [hotelId], references: [id], onDelete: Restrict)
   roomId                     String
   room                       Room              @relation(fields: [roomId], references: [id], onDelete: Restrict)
   deviceId                   String?
