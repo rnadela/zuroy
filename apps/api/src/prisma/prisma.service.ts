@@ -8,15 +8,17 @@ export class PrismaService
   extends PrismaClient
   implements OnModuleInit, OnModuleDestroy
 {
-  private _tenantClient: ReturnType<typeof this.$extends>;
+  private _tenantClient: PrismaClient;
 
   constructor(private readonly cls: ClsService) {
     super();
-    this._tenantClient = this.$extends(tenantExtension(this.cls));
+    this._tenantClient = this.$extends(
+      tenantExtension(this.cls),
+    ) as unknown as PrismaClient;
   }
 
   /** Auto-scoped by hotelId from JWT via CLS. Use for all tenant-scoped queries. */
-  get tenant() {
+  get tenant(): PrismaClient {
     return this._tenantClient;
   }
 

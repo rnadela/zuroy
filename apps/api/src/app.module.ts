@@ -6,6 +6,13 @@ import { ClsModule } from 'nestjs-cls';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { HealthModule } from './health/health.module';
+import { HotelsModule } from './hotels/hotels.module';
+import { UsersModule } from './users/users.module';
+import { RoomsModule } from './rooms/rooms.module';
+import { ReservationsModule } from './reservations/reservations.module';
+import { DevicesModule } from './devices/devices.module';
+import { AmenitiesModule } from './amenities/amenities.module';
+import { ServicesModule } from './services/services.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { RolesGuard } from './auth/guards/roles.guard';
 import { TenantContextGuard } from './auth/guards/tenant-context.guard';
@@ -20,6 +27,13 @@ import { TenantContextGuard } from './auth/guards/tenant-context.guard';
     PrismaModule,
     AuthModule,
     HealthModule,
+    HotelsModule,
+    UsersModule,
+    RoomsModule,
+    ReservationsModule,
+    DevicesModule,
+    AmenitiesModule,
+    ServicesModule,
   ],
   providers: [
     // Guard order matters: Throttler → JWT → Roles → TenantContext
