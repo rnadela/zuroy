@@ -7,6 +7,8 @@ import {
   Param,
   Body,
   UsePipes,
+  Req,
+  ForbiddenException,
 } from '@nestjs/common';
 import { HotelsService } from './hotels.service';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -22,13 +24,21 @@ import {
 export class HotelsController {
   constructor(private readonly hotelsService: HotelsService) {}
 
+  @Roles('SUPER_ADMIN')
   @Get()
   findAll() {
     return this.hotelsService.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  async findOne(
+    @Param('id') id: string,
+    @Req() req: { user: { role: string; hotelId?: string } },
+  ) {
+    // HOTEL_STAFF can only view their own hotel
+    if (req.user.role !== 'SUPER_ADMIN' && req.user.hotelId !== id) {
+      throw new ForbiddenException('Access denied');
+    }
     return this.hotelsService.findOne(id);
   }
 

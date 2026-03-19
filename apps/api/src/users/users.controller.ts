@@ -8,6 +8,7 @@ import {
   Body,
   UsePipes,
   Req,
+  ForbiddenException,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -29,8 +30,16 @@ export class UsersController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.usersService.findOne(id);
+  async findOne(
+    @Param('id') id: string,
+    @Req() req: { user: { id: string; role: string; hotelId?: string } },
+  ) {
+    const user = await this.usersService.findOne(id);
+    // HOTEL_STAFF can only view own profile or same-hotel users
+    if (req.user.role !== 'SUPER_ADMIN' && user.hotelId !== req.user.hotelId) {
+      throw new ForbiddenException('Access denied');
+    }
+    return user;
   }
 
   @Roles('SUPER_ADMIN')
