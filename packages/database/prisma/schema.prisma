@@ -28,12 +28,15 @@ model Hotel {
   devices      Device[]
   staff        User[]
   reservations Reservation[]
+  amenities    Amenity[]
+  serviceItems ServiceItem[]
+  serviceRequests ServiceRequest[]
 }
 
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
-  passwordHash String   @db.VarChar(60)
+  passwordHash String   @db.VarChar(255)
   firstName    String
   lastName     String
   role         Role     @default(HOTEL_STAFF)
@@ -111,8 +114,11 @@ model Reservation {
   createdAt                  DateTime          @default(now())
   updatedAt                  DateTime          @updatedAt
 
+  serviceRequests ServiceRequest[]
+
   @@index([hotelId])
-  @@index([roomId, status, checkIn, checkOut])
+  @@index([hotelId, status, checkIn])
+  @@index([roomId, checkIn, checkOut])
   @@index([status])
   @@index([deviceId])
 }
@@ -123,4 +129,65 @@ enum ReservationStatus {
   CHECKED_OUT
   CANCELLED
   NO_SHOW
+}
+
+// ─── Service Models ─────────────────────────────────
+
+model Amenity {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  category    String
+  hotelId     String
+  hotel       Hotel    @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+  latitude    Float?   @db.DoublePrecision
+  longitude   Float?   @db.DoublePrecision
+  hours       String?
+  photoUrls   String[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([hotelId, category])
+}
+
+model ServiceItem {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  category    String
+  price       Decimal  @db.Decimal(10, 2)
+  hotelId     String
+  hotel       Hotel    @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+  available   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  serviceRequests ServiceRequest[]
+
+  @@index([hotelId, category])
+}
+
+model ServiceRequest {
+  id            String               @id @default(cuid())
+  reservationId String
+  reservation   Reservation          @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  itemId        String
+  item          ServiceItem          @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  hotelId       String
+  hotel         Hotel                @relation(fields: [hotelId], references: [id], onDelete: Restrict)
+  quantity      Int                  @default(1)
+  notes         String?
+  status        ServiceRequestStatus @default(PENDING)
+  chargeAmount  Decimal              @db.Decimal(10, 2)
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+
+  @@index([hotelId, status])
+  @@index([reservationId])
+}
+
+enum ServiceRequestStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
 }
