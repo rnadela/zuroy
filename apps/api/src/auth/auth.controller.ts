@@ -1,6 +1,7 @@
 import { Controller, Post, Body, UsePipes } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { Public } from './decorators/public.decorator';
+import { Roles } from './decorators/roles.decorator';
 import { ZodValidationPipe } from './pipes/zod-validation.pipe';
 import { loginSchema, registerSchema } from '@zuroy/shared';
 import type { LoginDto, RegisterDto } from '@zuroy/shared';
@@ -16,7 +17,7 @@ export class AuthController {
     return this.authService.login(dto);
   }
 
-  @Public()
+  @Roles('SUPER_ADMIN')
   @Post('register')
   @UsePipes(new ZodValidationPipe(registerSchema))
   async register(@Body() dto: RegisterDto) {
