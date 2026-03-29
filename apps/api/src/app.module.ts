@@ -13,6 +13,7 @@ import { ReservationsModule } from './reservations/reservations.module';
 import { DevicesModule } from './devices/devices.module';
 import { AmenitiesModule } from './amenities/amenities.module';
 import { ServicesModule } from './services/services.module';
+import { PartnersModule } from './partners/partners.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { RolesGuard } from './auth/guards/roles.guard';
 import { TenantContextGuard } from './auth/guards/tenant-context.guard';
@@ -34,6 +35,7 @@ import { TenantContextGuard } from './auth/guards/tenant-context.guard';
     DevicesModule,
     AmenitiesModule,
     ServicesModule,
+    PartnersModule,
   ],
   providers: [
     // Guard order matters: Throttler → JWT → Roles → TenantContext

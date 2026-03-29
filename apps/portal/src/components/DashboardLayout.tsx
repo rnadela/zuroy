@@ -23,6 +23,7 @@ import {
   Hotel,
   PhoneAndroid,
   People,
+  StorefrontOutlined,
   Logout,
 } from '@mui/icons-material';
 import { getUser, logout } from '@/lib/auth';
@@ -32,6 +33,7 @@ const NAV_ITEMS = [
   { label: 'Dashboard', href: '/', icon: <Dashboard /> },
   { label: 'Hotels', href: '/hotels', icon: <Hotel /> },
   { label: 'Devices', href: '/devices', icon: <PhoneAndroid /> },
+  { label: 'Partners', href: '/partners', icon: <StorefrontOutlined /> },
   { label: 'Users', href: '/users', icon: <People /> },
 ];
 

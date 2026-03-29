@@ -191,3 +191,27 @@ enum ServiceRequestStatus {
   COMPLETED
   CANCELLED
 }
+
+// ─── Partner Models ─────────────────────────────────
+
+model Partner {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  category    String
+  latitude    Float    @db.DoublePrecision
+  longitude   Float    @db.DoublePrecision
+  address     String?
+  phone       String?
+  website     String?
+  hours       String?
+  photoUrls   String[]
+  boosted     Boolean  @default(false)
+  boostRegion String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category])
+  @@index([latitude, longitude])
+  @@index([boosted])
+}
