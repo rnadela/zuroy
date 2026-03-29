@@ -7,18 +7,21 @@ export const PORTAL_URL =
 export const CONNECT_URL =
   process.env.E2E_CONNECT_URL || `http://127.0.0.1:${process.env.E2E_CONNECT_PORT || '3002'}`;
 
-export async function adminLogin(request: APIRequestContext) {
+interface LoginResult {
+  accessToken: string;
+  user: { id: string; email: string; firstName: string; lastName: string; role: string; hotelId?: string };
+}
+
+export async function adminLogin(request: APIRequestContext): Promise<LoginResult> {
   const res = await request.post(`${API_URL}/v1/auth/login`, {
     data: { email: 'admin@zuroy.com', password: 'AdminPassword123!' },
   });
-  const body = await res.json();
-  return body.accessToken as string;
+  return await res.json();
 }
 
-export async function staffLogin(request: APIRequestContext) {
+export async function staffLogin(request: APIRequestContext): Promise<LoginResult> {
   const res = await request.post(`${API_URL}/v1/auth/login`, {
     data: { email: 'staff@testhotel.com', password: 'StaffPassword123!' },
   });
-  const body = await res.json();
-  return body.accessToken as string;
+  return await res.json();
 }

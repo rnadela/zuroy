@@ -8,26 +8,26 @@ type Fixtures = {
 
 export const test = base.extend<Fixtures>({
   adminPage: async ({ page, request }, use) => {
-    const token = await adminLogin(request);
-    await page.addInitScript((t) => {
-      localStorage.setItem('zuroy_token', t);
-      localStorage.setItem(
-        'zuroy_user',
-        JSON.stringify({ id: 'admin', email: 'admin@zuroy.com', role: 'SUPER_ADMIN', firstName: 'Admin', lastName: 'User' }),
-      );
-    }, token);
+    const { accessToken, user } = await adminLogin(request);
+    await page.addInitScript(
+      ({ token, userData }) => {
+        localStorage.setItem('zuroy_token', token);
+        localStorage.setItem('zuroy_user', JSON.stringify(userData));
+      },
+      { token: accessToken, userData: user },
+    );
     await use(page);
   },
 
   staffPage: async ({ page, request }, use) => {
-    const token = await staffLogin(request);
-    await page.addInitScript((t) => {
-      localStorage.setItem('zuroy_token', t);
-      localStorage.setItem(
-        'zuroy_user',
-        JSON.stringify({ id: 'staff', email: 'staff@testhotel.com', role: 'HOTEL_STAFF', firstName: 'Staff', lastName: 'User', hotelId: 'test-hotel-id' }),
-      );
-    }, token);
+    const { accessToken, user } = await staffLogin(request);
+    await page.addInitScript(
+      ({ token, userData }) => {
+        localStorage.setItem('zuroy_token', token);
+        localStorage.setItem('zuroy_user', JSON.stringify(userData));
+      },
+      { token: accessToken, userData: user },
+    );
     await use(page);
   },
 });

@@ -6,7 +6,8 @@ let hotelId: string;
 const uid = Date.now();
 
 test.beforeAll(async ({ request }) => {
-  token = await adminLogin(request);
+  const result = await adminLogin(request);
+  token = result.accessToken;
 });
 
 test.describe('Hotels API', () => {

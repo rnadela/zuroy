@@ -8,7 +8,8 @@ let deviceId: string;
 let reservationId: string;
 
 test.beforeAll(async ({ request }) => {
-  token = await adminLogin(request);
+  const result = await adminLogin(request);
+  token = result.accessToken;
   // Get the seeded hotel
   const hotels = await (
     await request.get(`${API_URL}/v1/hotels`, {
