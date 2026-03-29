@@ -5,11 +5,12 @@ import dotenv from 'dotenv';
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const API_PORT = process.env.E2E_API_PORT || '3001';
-const API_URL = `http://localhost:${API_PORT}`;
+const API_URL = `http://127.0.0.1:${API_PORT}`;
+const API_URL_V1 = `${API_URL}/v1`;
 const PORTAL_PORT = process.env.E2E_PORTAL_PORT || '3000';
-const PORTAL_URL = `http://localhost:${PORTAL_PORT}`;
+const PORTAL_URL = `http://127.0.0.1:${PORTAL_PORT}`;
 const CONNECT_PORT = process.env.E2E_CONNECT_PORT || '3002';
-const CONNECT_URL = `http://localhost:${CONNECT_PORT}`;
+const CONNECT_URL = `http://127.0.0.1:${CONNECT_PORT}`;
 const testDbUrl =
   process.env.DATABASE_URL_TEST ||
   'postgresql://postgres:postgres@localhost:5432/zuroy_test';
@@ -31,22 +32,22 @@ export default defineConfig({
         NODE_ENV: 'test',
         JWT_SECRET: 'e2e-test-secret-minimum-32-characters',
         JWT_EXPIRATION: '15m',
-        REDIS_URL: 'redis://localhost:6379',
+        REDIS_URL: 'redis://127.0.0.1:6379',
       },
       reuseExistingServer: false,
     },
     {
-      command: `node .next/standalone/apps/portal/server.js`,
+      command: `npx next dev -p ${PORTAL_PORT}`,
       cwd: path.resolve(__dirname, '../apps/portal'),
       port: Number(PORTAL_PORT),
-      env: { NEXT_PUBLIC_API_URL: API_URL, PORT: PORTAL_PORT, HOSTNAME: '0.0.0.0' },
+      env: { NEXT_PUBLIC_API_URL: API_URL_V1 },
       reuseExistingServer: false,
     },
     {
-      command: `node .next/standalone/apps/connect/server.js`,
+      command: `npx next dev -p ${CONNECT_PORT}`,
       cwd: path.resolve(__dirname, '../apps/connect'),
       port: Number(CONNECT_PORT),
-      env: { NEXT_PUBLIC_API_URL: API_URL, PORT: CONNECT_PORT, HOSTNAME: '0.0.0.0' },
+      env: { NEXT_PUBLIC_API_URL: API_URL_V1 },
       reuseExistingServer: false,
     },
   ],
@@ -64,6 +65,7 @@ export default defineConfig({
     {
       name: 'browser-portal',
       testDir: './tests/browser/portal',
+      timeout: 60000,
       use: { baseURL: PORTAL_URL },
     },
     {

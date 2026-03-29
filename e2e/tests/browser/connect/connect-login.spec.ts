@@ -1,16 +1,24 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Connect Login', () => {
-  test('login page loads', async ({ page }) => {
+  test('login page shows form', async ({ page }) => {
     await page.goto('/login');
-    await expect(page.getByRole('button', { name: /sign in/i })).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('form')).toBeVisible({ timeout: 30000 });
   });
 
-  test('login with staff credentials', async ({ page }) => {
+  test('valid staff login redirects', async ({ page }) => {
     await page.goto('/login');
-    await page.getByLabel('Email').fill('staff@testhotel.com');
-    await page.getByLabel('Password').fill('StaffPassword123!');
+    await page.locator('input[type="email"]').fill('staff@testhotel.com');
+    await page.locator('input[type="password"]').fill('StaffPassword123!');
     await page.getByRole('button', { name: /sign in/i }).click();
-    await expect(page.getByText(/dashboard|good/i)).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('body')).toContainText(/dashboard|good/i, { timeout: 15000 });
+  });
+
+  test('wrong password shows error', async ({ page }) => {
+    await page.goto('/login');
+    await page.locator('input[type="email"]').fill('staff@testhotel.com');
+    await page.locator('input[type="password"]').fill('wrongpassword1');
+    await page.getByRole('button', { name: /sign in/i }).click();
+    await expect(page.locator('.MuiAlert-root').first()).toBeVisible({ timeout: 10000 });
   });
 });

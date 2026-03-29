@@ -1,11 +1,11 @@
 import { APIRequestContext } from '@playwright/test';
 
 export const API_URL =
-  process.env.E2E_API_URL || `http://localhost:${process.env.E2E_API_PORT || '3001'}`;
+  process.env.E2E_API_URL || `http://127.0.0.1:${process.env.E2E_API_PORT || '3001'}`;
 export const PORTAL_URL =
-  process.env.E2E_PORTAL_URL || `http://localhost:${process.env.E2E_PORTAL_PORT || '3000'}`;
+  process.env.E2E_PORTAL_URL || `http://127.0.0.1:${process.env.E2E_PORTAL_PORT || '3000'}`;
 export const CONNECT_URL =
-  process.env.E2E_CONNECT_URL || `http://localhost:${process.env.E2E_CONNECT_PORT || '3002'}`;
+  process.env.E2E_CONNECT_URL || `http://127.0.0.1:${process.env.E2E_CONNECT_PORT || '3002'}`;
 
 export async function adminLogin(request: APIRequestContext) {
   const res = await request.post(`${API_URL}/v1/auth/login`, {

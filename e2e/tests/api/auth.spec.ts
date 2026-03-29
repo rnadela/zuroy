@@ -22,6 +22,49 @@ test.describe('Auth API', () => {
     expect(res.status()).toBe(401);
   });
 
+  test('POST /v1/auth/login with non-existent email returns 401', async ({ request }) => {
+    const res = await request.post(`${API_URL}/v1/auth/login`, {
+      data: { email: 'nobody@nowhere.com', password: 'SomePassword123!' },
+    });
+    expect(res.status()).toBe(401);
+  });
+
+  test('POST /v1/auth/login with missing fields returns 400', async ({ request }) => {
+    const res = await request.post(`${API_URL}/v1/auth/login`, {
+      data: {},
+    });
+    expect(res.status()).toBe(400);
+  });
+
+  test('POST /v1/auth/login with missing password returns 400', async ({ request }) => {
+    const res = await request.post(`${API_URL}/v1/auth/login`, {
+      data: { email: 'admin@zuroy.com' },
+    });
+    expect(res.status()).toBe(400);
+  });
+
+  test('GET protected route without token returns 401', async ({ request }) => {
+    const res = await request.get(`${API_URL}/v1/hotels`);
+    expect(res.status()).toBe(401);
+  });
+
+  test('GET protected route with garbage token returns 401', async ({ request }) => {
+    const res = await request.get(`${API_URL}/v1/hotels`, {
+      headers: { Authorization: 'Bearer totally.invalid.token' },
+    });
+    expect(res.status()).toBe(401);
+  });
+
+  test('GET admin route with expired-style token returns 401', async ({ request }) => {
+    // A structurally valid but expired/forged JWT
+    const fakeJwt =
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwiZXhwIjoxfQ.invalid_sig';
+    const res = await request.get(`${API_URL}/v1/hotels`, {
+      headers: { Authorization: `Bearer ${fakeJwt}` },
+    });
+    expect(res.status()).toBe(401);
+  });
+
   test('POST /v1/auth/logout revokes token', async ({ request }) => {
     // Login first
     const loginRes = await request.post(`${API_URL}/v1/auth/login`, {

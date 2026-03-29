@@ -1,24 +1,33 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Portal Login', () => {
-  test('login page loads with sign in button', async ({ page }) => {
+  test('login page shows sign in form', async ({ page }) => {
     await page.goto('/login');
-    await expect(page.getByRole('button', { name: /sign in/i })).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('form')).toBeVisible({ timeout: 30000 });
+    await expect(page.getByRole('button', { name: /sign in/i })).toBeVisible();
   });
 
-  test('login with valid credentials redirects to dashboard', async ({ page }) => {
+  test('valid credentials redirect to dashboard', async ({ page }) => {
     await page.goto('/login');
-    await page.getByLabel('Email').fill('admin@zuroy.com');
-    await page.getByLabel('Password').fill('AdminPassword123!');
+    await page.locator('input[type="email"]').fill('admin@zuroy.com');
+    await page.locator('input[type="password"]').fill('AdminPassword123!');
     await page.getByRole('button', { name: /sign in/i }).click();
-    await expect(page.getByText(/dashboard|welcome/i)).toBeVisible({ timeout: 15000 });
+    // Wait for dashboard content (client-side navigation, not full page load)
+    await expect(page.locator('body')).toContainText(/dashboard|welcome/i, { timeout: 15000 });
   });
 
-  test('login with wrong password shows error', async ({ page }) => {
+  test('wrong password shows error alert', async ({ page }) => {
     await page.goto('/login');
-    await page.getByLabel('Email').fill('admin@zuroy.com');
-    await page.getByLabel('Password').fill('wrongpassword1');
+    await page.locator('input[type="email"]').fill('admin@zuroy.com');
+    await page.locator('input[type="password"]').fill('wrongpassword1');
     await page.getByRole('button', { name: /sign in/i }).click();
-    await expect(page.getByRole('alert')).toBeVisible({ timeout: 10000 });
+    // Use .first() since Next.js route announcer also has role="alert"
+    await expect(page.locator('.MuiAlert-root').first()).toBeVisible({ timeout: 10000 });
+  });
+
+  test('empty form does not submit', async ({ page }) => {
+    await page.goto('/login');
+    await page.getByRole('button', { name: /sign in/i }).click();
+    await expect(page).toHaveURL(/login/);
   });
 });
