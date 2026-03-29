@@ -6,4 +6,5 @@ export const TENANT_SCOPED_MODELS = [
   'Amenity',
   'ServiceItem',
   'ServiceRequest',
+  'StayExtension',
 ] as const;

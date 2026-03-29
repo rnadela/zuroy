@@ -31,6 +31,7 @@ model Hotel {
   amenities    Amenity[]
   serviceItems ServiceItem[]
   serviceRequests ServiceRequest[]
+  stayExtensions  StayExtension[]
 }
 
 model User {
@@ -115,6 +116,7 @@ model Reservation {
   updatedAt                  DateTime          @updatedAt
 
   serviceRequests ServiceRequest[]
+  stayExtensions  StayExtension[]
 
   @@index([hotelId])
   @@index([hotelId, status, checkIn])
@@ -214,4 +216,29 @@ model Partner {
   @@index([category])
   @@index([latitude, longitude])
   @@index([boosted])
+}
+
+// ─── Stay Extension ─────────────────────────────────
+
+model StayExtension {
+  id            String              @id @default(cuid())
+  reservationId String
+  reservation   Reservation         @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  hotelId       String
+  hotel         Hotel               @relation(fields: [hotelId], references: [id], onDelete: Restrict)
+  newCheckOut   DateTime
+  reason        String?
+  status        StayExtensionStatus @default(PENDING)
+  rejectionNote String?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  @@index([hotelId, status])
+  @@index([reservationId])
+}
+
+enum StayExtensionStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }

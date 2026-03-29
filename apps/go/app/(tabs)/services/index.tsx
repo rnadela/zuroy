@@ -48,6 +48,16 @@ export default function ServicesScreen() {
       keyExtractor={(c) => c}
       style={{ backgroundColor: theme.primary || DARK }}
       contentContainerStyle={styles.list}
+      ListHeaderComponent={
+        <TouchableOpacity
+          style={[styles.extensionBtn, { borderColor: theme.secondary || GOLD }]}
+          onPress={() => router.push('/services/extend')}
+        >
+          <Text style={[styles.extensionBtnText, { color: theme.secondary || GOLD }]}>
+            Request Extension
+          </Text>
+        </TouchableOpacity>
+      }
       renderItem={({ item: category }) => (
         <View style={styles.section}>
           <Text style={[styles.category, { color: theme.secondary || GOLD }]}>{category}</Text>
@@ -101,4 +111,17 @@ const styles = StyleSheet.create({
   itemName: { fontSize: 16, fontWeight: '400', color: CREAM },
   itemPrice: { fontSize: 16, fontWeight: '600' },
   itemDesc: { fontSize: 14, color: MUTED, marginTop: 6 },
+  extensionBtn: {
+    borderWidth: 1.5,
+    borderRadius: 14,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  extensionBtnText: {
+    fontSize: 14,
+    fontWeight: '600',
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+  },
 });

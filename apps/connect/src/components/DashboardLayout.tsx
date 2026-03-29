@@ -23,6 +23,7 @@ import {
   MeetingRoom,
   BookOnline,
   RoomService,
+  EventRepeat,
   Place,
   Logout,
 } from '@mui/icons-material';
@@ -34,6 +35,7 @@ const NAV_ITEMS = [
   { label: 'Rooms', href: '/rooms', icon: <MeetingRoom /> },
   { label: 'Reservations', href: '/reservations', icon: <BookOnline /> },
   { label: 'Service Requests', href: '/requests', icon: <RoomService /> },
+  { label: 'Extensions', href: '/extensions', icon: <EventRepeat /> },
   { label: 'Amenities', href: '/amenities', icon: <Place /> },
 ];
 
