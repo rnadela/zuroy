@@ -1,16 +1,15 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { getConfig } from '../../src/lib/store';
+import { useTheme } from '../../src/context/ThemeContext';
 
 export default function TabLayout() {
-  const config = getConfig();
-  const primaryColor = config?.hotel?.primaryColor || '#1a56db';
+  const { theme } = useTheme();
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: primaryColor,
-        headerStyle: { backgroundColor: primaryColor },
+        tabBarActiveTintColor: theme.primary,
+        headerStyle: { backgroundColor: theme.primary },
         headerTintColor: '#fff',
       }}
     >

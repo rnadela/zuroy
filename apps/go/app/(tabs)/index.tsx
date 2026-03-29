@@ -1,20 +1,17 @@
-import { View, Text, Image, StyleSheet } from 'react-native';
+import { View, Text, Image, ImageBackground, StyleSheet } from 'react-native';
 import { getConfig } from '../../src/lib/store';
+import { useTheme } from '../../src/context/ThemeContext';
 
 export default function HomeScreen() {
   const config = getConfig();
+  const { theme } = useTheme();
   if (!config) return null;
   const { hotel, guestName, room, checkOut } = config;
 
-  return (
-    <View
-      style={[
-        styles.container,
-        hotel.backgroundUrl ? {} : { backgroundColor: hotel.primaryColor || '#1a56db' },
-      ]}
-    >
-      {hotel.logoUrl && (
-        <Image source={{ uri: hotel.logoUrl }} style={styles.logo} resizeMode="contain" />
+  const content = (
+    <>
+      {theme.logoUrl && (
+        <Image source={{ uri: theme.logoUrl }} style={styles.logo} resizeMode="contain" />
       )}
       <Text style={styles.hotelName}>{hotel.name}</Text>
       <View style={styles.card}>
@@ -25,8 +22,22 @@ export default function HomeScreen() {
         </Text>
         <Text style={styles.info}>Checkout: {new Date(checkOut).toLocaleDateString()}</Text>
       </View>
-    </View>
+    </>
   );
+
+  if (theme.backgroundUrl) {
+    return (
+      <ImageBackground
+        source={{ uri: theme.backgroundUrl }}
+        style={styles.container}
+        imageStyle={{ opacity: 0.8 }}
+      >
+        {content}
+      </ImageBackground>
+    );
+  }
+
+  return <View style={[styles.container, { backgroundColor: theme.primary }]}>{content}</View>;
 }
 
 const styles = StyleSheet.create({

@@ -1,21 +1,52 @@
 import { useEffect, useState } from 'react';
+import { BackHandler, Platform } from 'react-native';
 import { Stack, useRouter, useSegments } from 'expo-router';
-import { isProvisioned, subscribe } from '../src/lib/store';
+import { StatusBar } from 'expo-status-bar';
+import * as NavigationBar from 'expo-navigation-bar';
+import { ThemeProvider } from '../src/context/ThemeContext';
+import { isProvisioned, subscribe, loadPersistedConfig } from '../src/lib/store';
+import { initNfc } from '../src/lib/nfc';
 
 export default function RootLayout() {
-  const [provisioned, setProvisioned] = useState(isProvisioned());
+  const [provisioned, setProvisioned] = useState(false);
+  const [ready, setReady] = useState(false);
   const router = useRouter();
   const segments = useSegments();
 
-  useEffect(() => subscribe(() => setProvisioned(isProvisioned())), []);
-
+  // Kiosk mode
   useEffect(() => {
-    if (!provisioned && segments[0] !== 'provision') {
-      router.replace('/provision');
-    } else if (provisioned && segments[0] === 'provision') {
-      router.replace('/');
+    if (Platform.OS === 'android') {
+      NavigationBar.setVisibilityAsync('hidden');
+      NavigationBar.setBehaviorAsync('overlay-swipe');
     }
-  }, [provisioned, segments]);
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => true);
+    return () => sub.remove();
+  }, []);
 
-  return <Stack screenOptions={{ headerShown: false }} />;
+  // Init NFC + load persisted config
+  useEffect(() => {
+    (async () => {
+      await initNfc();
+      const loaded = await loadPersistedConfig();
+      setProvisioned(loaded || isProvisioned());
+      setReady(true);
+    })();
+    return subscribe(() => setProvisioned(isProvisioned()));
+  }, []);
+
+  // Routing guard
+  useEffect(() => {
+    if (!ready) return;
+    if (!provisioned && segments[0] !== 'provision') router.replace('/provision');
+    else if (provisioned && segments[0] === 'provision') router.replace('/');
+  }, [provisioned, segments, ready]);
+
+  if (!ready) return null;
+
+  return (
+    <ThemeProvider>
+      <StatusBar hidden />
+      <Stack screenOptions={{ headerShown: false }} />
+    </ThemeProvider>
+  );
 }

@@ -10,16 +10,18 @@
     "lint": "echo 'No lint configured yet'"
   },
   "dependencies": {
+    "@react-native-async-storage/async-storage": "^3.0.2",
+    "@zuroy/shared": "*",
     "expo": "~54.0.0",
     "expo-dev-client": "~5.0.0",
+    "expo-navigation-bar": "^55.0.9",
     "expo-router": "~4.0.0",
     "expo-status-bar": "~2.0.0",
     "react": "^19",
     "react-native": "~0.79.0",
     "react-native-nfc-manager": "^3.14.0",
     "react-native-safe-area-context": "~5.0.0",
-    "react-native-screens": "~4.0.0",
-    "@zuroy/shared": "*"
+    "react-native-screens": "~4.0.0"
   },
   "devDependencies": {
     "@types/react": "^19",

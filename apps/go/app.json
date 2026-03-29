@@ -7,7 +7,18 @@
     "android": {
       "package": "com.zuroy.go"
     },
-    "plugins": ["expo-router", "react-native-nfc-manager"],
+    "plugins": [
+      "expo-router",
+      "react-native-nfc-manager",
+      [
+        "expo-navigation-bar",
+        {
+          "position": "absolute",
+          "visibility": "hidden",
+          "behavior": "overlay-swipe"
+        }
+      ]
+    ],
     "scheme": "zuroy-go"
   }
 }

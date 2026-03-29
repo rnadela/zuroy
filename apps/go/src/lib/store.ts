@@ -1,3 +1,5 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 interface GuestConfig {
   id: string;
   guestName: string;
@@ -25,10 +27,13 @@ export function getConfig() {
 }
 export function setConfig(config: GuestConfig) {
   guestConfig = config;
+  AsyncStorage.setItem('zuroy_config', JSON.stringify(config));
   listeners.forEach((l) => l());
 }
 export function clearConfig() {
   guestConfig = null;
+  AsyncStorage.removeItem('zuroy_config');
+  AsyncStorage.removeItem('zuroy_theme');
   listeners.forEach((l) => l());
 }
 export function subscribe(listener: () => void) {
@@ -39,4 +44,13 @@ export function subscribe(listener: () => void) {
 }
 export function isProvisioned() {
   return guestConfig !== null;
+}
+export async function loadPersistedConfig(): Promise<boolean> {
+  const raw = await AsyncStorage.getItem('zuroy_config');
+  if (raw) {
+    guestConfig = JSON.parse(raw);
+    listeners.forEach((l) => l());
+    return true;
+  }
+  return false;
 }
