@@ -8,7 +8,6 @@ import {
   Body,
   Query,
   UseGuards,
-  UsePipes,
 } from '@nestjs/common';
 import { TenantGuard } from '../auth/guards/tenant.guard';
 import { Public } from '../auth/decorators/public.decorator';
@@ -44,14 +43,20 @@ export class ServiceCatalogController {
   }
 
   @Post()
-  @UsePipes(new ZodValidationPipe(createServiceItemSchema))
-  create(@Param('hotelId') hotelId: string, @Body() dto: CreateServiceItemDto) {
+  create(
+    @Param('hotelId') hotelId: string,
+    @Body(new ZodValidationPipe(createServiceItemSchema))
+    dto: CreateServiceItemDto,
+  ) {
     return this.catalogService.create(hotelId, dto);
   }
 
   @Patch(':id')
-  @UsePipes(new ZodValidationPipe(updateServiceItemSchema))
-  update(@Param('id') id: string, @Body() dto: UpdateServiceItemDto) {
+  update(
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(updateServiceItemSchema))
+    dto: UpdateServiceItemDto,
+  ) {
     return this.catalogService.update(id, dto);
   }
 

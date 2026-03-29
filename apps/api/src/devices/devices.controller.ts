@@ -1,13 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Param,
-  Query,
-  Req,
-  UsePipes,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query, Req } from '@nestjs/common';
 import { DevicesService } from './devices.service';
 import { Public } from '../auth/decorators/public.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -32,8 +23,9 @@ export class DevicesController {
 
   @Roles('SUPER_ADMIN')
   @Post()
-  @UsePipes(new ZodValidationPipe(createDeviceSchema))
-  create(@Body() dto: CreateDeviceDto) {
+  create(
+    @Body(new ZodValidationPipe(createDeviceSchema)) dto: CreateDeviceDto,
+  ) {
     return this.devicesService.create(dto);
   }
 
@@ -49,8 +41,10 @@ export class DevicesController {
 
   @Roles('SUPER_ADMIN')
   @Post(':id/assign')
-  @UsePipes(new ZodValidationPipe(assignDeviceSchema))
-  assign(@Param('id') id: string, @Body() dto: AssignDeviceDto) {
+  assign(
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(assignDeviceSchema)) dto: AssignDeviceDto,
+  ) {
     return this.devicesService.assign(id, dto);
   }
 
@@ -62,10 +56,9 @@ export class DevicesController {
 
   @Public()
   @Post(':id/heartbeat')
-  @UsePipes(new ZodValidationPipe(heartbeatSchema))
   heartbeat(
     @Param('id') id: string,
-    @Body() dto: HeartbeatDto,
+    @Body(new ZodValidationPipe(heartbeatSchema)) dto: HeartbeatDto,
     @Req() req: Request,
   ) {
     const deviceToken = req.headers['x-device-token'] as string;
@@ -74,8 +67,10 @@ export class DevicesController {
 
   @Public()
   @Post('provision')
-  @UsePipes(new ZodValidationPipe(provisionSchema))
-  provision(@Body() dto: ProvisionDto, @Req() req: Request) {
+  provision(
+    @Body(new ZodValidationPipe(provisionSchema)) dto: ProvisionDto,
+    @Req() req: Request,
+  ) {
     const deviceToken = req.headers['x-device-token'] as string;
     return this.devicesService.provision(dto.provisioningToken, deviceToken);
   }

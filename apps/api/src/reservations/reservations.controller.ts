@@ -7,7 +7,6 @@ import {
   Post,
   Query,
   UseGuards,
-  UsePipes,
 } from '@nestjs/common';
 import { TenantGuard } from '../auth/guards/tenant.guard';
 import { ZodValidationPipe } from '../auth/pipes/zod-validation.pipe';
@@ -27,8 +26,11 @@ export class ReservationsController {
   constructor(private readonly reservations: ReservationsService) {}
 
   @Post()
-  @UsePipes(new ZodValidationPipe(createReservationSchema))
-  create(@Param('hotelId') hotelId: string, @Body() dto: CreateReservationDto) {
+  create(
+    @Param('hotelId') hotelId: string,
+    @Body(new ZodValidationPipe(createReservationSchema))
+    dto: CreateReservationDto,
+  ) {
     return this.reservations.create(hotelId, dto);
   }
 
@@ -49,14 +51,19 @@ export class ReservationsController {
   }
 
   @Patch(':id')
-  @UsePipes(new ZodValidationPipe(updateReservationSchema))
-  update(@Param('id') id: string, @Body() dto: UpdateReservationDto) {
+  update(
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(updateReservationSchema))
+    dto: UpdateReservationDto,
+  ) {
     return this.reservations.update(id, dto);
   }
 
   @Post(':id/check-in')
-  @UsePipes(new ZodValidationPipe(checkInSchema))
-  checkIn(@Param('id') id: string, @Body() dto: CheckInDto) {
+  checkIn(
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(checkInSchema)) dto: CheckInDto,
+  ) {
     return this.reservations.checkIn(id, dto);
   }
 

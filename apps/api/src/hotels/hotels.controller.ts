@@ -6,7 +6,6 @@ import {
   Delete,
   Param,
   Body,
-  UsePipes,
   Req,
   ForbiddenException,
 } from '@nestjs/common';
@@ -44,15 +43,16 @@ export class HotelsController {
 
   @Roles('SUPER_ADMIN')
   @Post()
-  @UsePipes(new ZodValidationPipe(createHotelSchema))
-  create(@Body() dto: CreateHotelDto) {
+  create(@Body(new ZodValidationPipe(createHotelSchema)) dto: CreateHotelDto) {
     return this.hotelsService.create(dto);
   }
 
   @Roles('SUPER_ADMIN')
   @Patch(':id')
-  @UsePipes(new ZodValidationPipe(updateHotelSchema))
-  update(@Param('id') id: string, @Body() dto: UpdateHotelDto) {
+  update(
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(updateHotelSchema)) dto: UpdateHotelDto,
+  ) {
     return this.hotelsService.update(id, dto);
   }
 

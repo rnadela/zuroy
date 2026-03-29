@@ -6,7 +6,6 @@ import {
   Delete,
   Param,
   Body,
-  UsePipes,
   UseGuards,
 } from '@nestjs/common';
 import { RoomsService } from './rooms.service';
@@ -35,14 +34,18 @@ export class RoomsController {
   }
 
   @Post()
-  @UsePipes(new ZodValidationPipe(createRoomSchema))
-  create(@Param('hotelId') hotelId: string, @Body() dto: CreateRoomDto) {
+  create(
+    @Param('hotelId') hotelId: string,
+    @Body(new ZodValidationPipe(createRoomSchema)) dto: CreateRoomDto,
+  ) {
     return this.roomsService.create(hotelId, dto);
   }
 
   @Patch(':id')
-  @UsePipes(new ZodValidationPipe(updateRoomSchema))
-  update(@Param('id') id: string, @Body() dto: UpdateRoomDto) {
+  update(
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(updateRoomSchema)) dto: UpdateRoomDto,
+  ) {
     return this.roomsService.update(id, dto);
   }
 

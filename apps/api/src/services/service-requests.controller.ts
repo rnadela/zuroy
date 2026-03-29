@@ -7,7 +7,6 @@ import {
   Body,
   Query,
   UseGuards,
-  UsePipes,
 } from '@nestjs/common';
 import { TenantGuard } from '../auth/guards/tenant.guard';
 import { ZodValidationPipe } from '../auth/pipes/zod-validation.pipe';
@@ -27,11 +26,11 @@ export class ServiceRequestsController {
   constructor(private readonly requestsService: ServiceRequestsService) {}
 
   @Post('reservations/:reservationId/requests')
-  @UsePipes(new ZodValidationPipe(createServiceRequestSchema))
   create(
     @Param('hotelId') hotelId: string,
     @Param('reservationId') reservationId: string,
-    @Body() dto: CreateServiceRequestDto,
+    @Body(new ZodValidationPipe(createServiceRequestSchema))
+    dto: CreateServiceRequestDto,
   ) {
     return this.requestsService.create(hotelId, reservationId, dto);
   }
@@ -45,8 +44,11 @@ export class ServiceRequestsController {
   }
 
   @Patch('requests/:id/status')
-  @UsePipes(new ZodValidationPipe(updateRequestStatusSchema))
-  updateStatus(@Param('id') id: string, @Body() dto: UpdateRequestStatusDto) {
+  updateStatus(
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(updateRequestStatusSchema))
+    dto: UpdateRequestStatusDto,
+  ) {
     return this.requestsService.updateStatus(id, dto);
   }
 
