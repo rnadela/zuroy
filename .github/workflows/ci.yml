@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  DATABASE_URL: postgresql://postgres:postgres@localhost:5432/zuroy_test
+  JWT_SECRET: ci-test-secret-minimum-32-characters-long
+  JWT_EXPIRATION: 15m
+  NODE_ENV: test
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: zuroy_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile --ignore-engines
+
+      - name: Generate Prisma client
+        run: yarn db:generate
+
+      - name: Run Prisma migrations
+        run: yarn workspace @zuroy/database db:push
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/zuroy_test
+
+      - name: Build packages
+        run: yarn workspace @zuroy/shared build && yarn workspace @zuroy/database build
+
+      - name: Lint
+        run: yarn lint
+        continue-on-error: true
+
+      - name: Test API
+        run: yarn workspace api test
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/zuroy_test
+
+      - name: Test Portal
+        run: yarn workspace portal test
+
+      - name: Test Connect
+        run: yarn workspace connect test
+
+      - name: Build API
+        run: cd apps/api && npx nest build
+
+      - name: Build Portal
+        run: cd apps/portal && npx next build
+
+      - name: Build Connect
+        run: cd apps/connect && npx next build
