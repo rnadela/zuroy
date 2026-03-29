@@ -101,7 +101,7 @@ export class ReservationsService {
 
     await this.checkoutPurge.scheduleCheckoutPurge(id, updated.checkOut);
 
-    return { provisioningToken: rawToken };
+    return { ...updated, provisioningToken: rawToken };
   }
 
   async checkOut(id: string) {
