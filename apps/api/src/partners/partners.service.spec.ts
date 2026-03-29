@@ -82,9 +82,7 @@ describe('PartnersService', () => {
     it('should throw NotFoundException when partner not found', async () => {
       prisma.partner.findUnique.mockResolvedValue(null);
 
-      await expect(service.findOne('nope')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.findOne('nope')).rejects.toThrow(NotFoundException);
     });
   });
 

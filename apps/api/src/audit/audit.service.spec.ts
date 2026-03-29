@@ -16,10 +16,7 @@ describe('AuditService', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
     const module = await Test.createTestingModule({
-      providers: [
-        AuditService,
-        { provide: PrismaService, useValue: prisma },
-      ],
+      providers: [AuditService, { provide: PrismaService, useValue: prisma }],
     }).compile();
     service = module.get(AuditService);
   });

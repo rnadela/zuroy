@@ -27,8 +27,9 @@ import {
   DialogContentText,
   DialogActions,
   IconButton,
+  LinearProgress,
 } from '@mui/material';
-import { ArrowBack, ContentCopy, CheckCircle } from '@mui/icons-material';
+import { ArrowBack, ContentCopy, CheckCircle, Wifi, WifiOff } from '@mui/icons-material';
 import { hotelApi, api } from '@/lib/api';
 
 interface Reservation {
@@ -40,6 +41,11 @@ interface Reservation {
   checkIn: string;
   checkOut: string;
   status: string;
+  hotspotSsid?: string;
+  hotspotPassword?: string;
+  hotspotEnabled?: boolean;
+  hotspotDataUsedMb?: number;
+  hotel?: { hotspotDataCapMb?: number };
 }
 
 interface Device {
@@ -76,6 +82,7 @@ export default function ReservationDetailPage() {
   const [error, setError] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
   const [checkoutDialogOpen, setCheckoutDialogOpen] = useState(false);
+  const [hotspotCopied, setHotspotCopied] = useState<'ssid' | 'password' | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -135,6 +142,30 @@ export default function ReservationDetailPage() {
     await navigator.clipboard.writeText(provisioningToken);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleToggleHotspot = async () => {
+    if (!reservation) return;
+    try {
+      setActionLoading(true);
+      const newEnabled = !reservation.hotspotEnabled;
+      await hotelApi(`/reservations/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ hotspotEnabled: newEnabled }),
+      });
+      setReservation((prev) => (prev ? { ...prev, hotspotEnabled: newEnabled } : prev));
+    } catch {
+      setError('Failed to toggle hotspot');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleHotspotCopy = async (text: string, field: 'ssid' | 'password') => {
+    await navigator.clipboard.writeText(text);
+    setHotspotCopied(field);
+    setTimeout(() => setHotspotCopied(null), 2000);
   };
 
   const chargesTotal = charges.reduce((sum, c) => sum + c.amount * c.quantity, 0);
@@ -271,6 +302,90 @@ export default function ReservationDetailPage() {
                 Copied to clipboard
               </Typography>
             )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Hotspot Section */}
+      {reservation.status === 'CHECKED_IN' && reservation.hotspotSsid && (
+        <Card className="mb-4">
+          <CardContent>
+            <div className="flex justify-between items-center mb-2">
+              <Typography variant="h5">
+                <Wifi sx={{ mr: 1, verticalAlign: 'middle' }} />
+                Hotspot
+              </Typography>
+              {!reservation.hotspotEnabled && (
+                <Chip label="Hotspot disabled" color="error" size="small" icon={<WifiOff />} />
+              )}
+            </div>
+            <div className="flex items-center gap-2 mb-2">
+              <Typography variant="body1">
+                <strong>SSID:</strong> {reservation.hotspotSsid}
+              </Typography>
+              <IconButton
+                size="small"
+                onClick={() => handleHotspotCopy(reservation.hotspotSsid!, 'ssid')}
+              >
+                {hotspotCopied === 'ssid' ? (
+                  <CheckCircle fontSize="small" color="success" />
+                ) : (
+                  <ContentCopy fontSize="small" />
+                )}
+              </IconButton>
+            </div>
+            {reservation.hotspotPassword && (
+              <div className="flex items-center gap-2 mb-2">
+                <Typography variant="body1">
+                  <strong>Password:</strong> {reservation.hotspotPassword}
+                </Typography>
+                <IconButton
+                  size="small"
+                  onClick={() => handleHotspotCopy(reservation.hotspotPassword!, 'password')}
+                >
+                  {hotspotCopied === 'password' ? (
+                    <CheckCircle fontSize="small" color="success" />
+                  ) : (
+                    <ContentCopy fontSize="small" />
+                  )}
+                </IconButton>
+              </div>
+            )}
+            <div className="mb-3">
+              <div className="flex justify-between mb-1">
+                <Typography variant="body2" color="text.secondary">
+                  Data Usage
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {reservation.hotspotDataUsedMb ?? 0} MB /{' '}
+                  {reservation.hotel?.hotspotDataCapMb ?? '\u221E'} MB
+                </Typography>
+              </div>
+              <LinearProgress
+                variant="determinate"
+                value={
+                  reservation.hotel?.hotspotDataCapMb
+                    ? Math.min(
+                        ((reservation.hotspotDataUsedMb ?? 0) /
+                          reservation.hotel.hotspotDataCapMb) *
+                          100,
+                        100,
+                      )
+                    : 0
+                }
+                sx={{ height: 8, borderRadius: 4 }}
+              />
+            </div>
+            <Button
+              variant="outlined"
+              color={reservation.hotspotEnabled ? 'error' : 'success'}
+              onClick={handleToggleHotspot}
+              disabled={actionLoading}
+              startIcon={reservation.hotspotEnabled ? <WifiOff /> : <Wifi />}
+              fullWidth
+            >
+              {reservation.hotspotEnabled ? 'Disable Hotspot' : 'Enable Hotspot'}
+            </Button>
           </CardContent>
         </Card>
       )}

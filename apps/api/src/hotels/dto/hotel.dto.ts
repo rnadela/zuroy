@@ -14,6 +14,7 @@ export const createHotelSchema = z.object({
   primaryColor: z.string().optional(),
   secondaryColor: z.string().optional(),
   backgroundUrl: z.string().url().optional(),
+  hotspotDataCapMb: z.number().int().min(0).optional(),
 });
 
 export const updateHotelSchema = createHotelSchema.partial();

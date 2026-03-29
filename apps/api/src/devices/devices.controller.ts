@@ -15,6 +15,8 @@ import type {
   HeartbeatDto,
   ProvisionDto,
 } from './dto/device.dto';
+import { updateDataUsageSchema } from './dto/hotspot.dto';
+import type { UpdateDataUsageDto } from './dto/hotspot.dto';
 import type { Request } from 'express';
 
 @Controller('devices')
@@ -63,6 +65,17 @@ export class DevicesController {
   ) {
     const deviceToken = req.headers['x-device-token'] as string;
     return this.devicesService.heartbeat(id, dto, deviceToken);
+  }
+
+  @Public()
+  @Post(':id/data-usage')
+  dataUsage(
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(updateDataUsageSchema)) dto: UpdateDataUsageDto,
+    @Req() req: Request,
+  ) {
+    const deviceToken = req.headers['x-device-token'] as string;
+    return this.devicesService.updateDataUsage(id, dto.dataUsedMb, deviceToken);
   }
 
   @Public()

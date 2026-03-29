@@ -20,9 +20,10 @@ model Hotel {
   logoUrl        String?
   primaryColor   String?
   secondaryColor String?
-  backgroundUrl  String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  backgroundUrl    String?
+  hotspotDataCapMb Int?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   rooms        Room[]
   devices      Device[]
@@ -112,6 +113,10 @@ model Reservation {
   status                     ReservationStatus @default(PENDING)
   provisioningToken          String?           @unique
   provisioningTokenExpiresAt DateTime?
+  hotspotSsid                String?
+  hotspotPassword            String?
+  hotspotEnabled             Boolean           @default(false)
+  hotspotDataUsedMb          Int               @default(0)
   createdAt                  DateTime          @default(now())
   updatedAt                  DateTime          @updatedAt
 

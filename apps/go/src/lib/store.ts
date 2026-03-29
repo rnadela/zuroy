@@ -16,7 +16,12 @@ interface GuestConfig {
     primaryColor?: string;
     secondaryColor?: string;
     backgroundUrl?: string;
+    hotspotDataCapMb?: number;
   };
+  hotspotSsid?: string;
+  hotspotPassword?: string;
+  hotspotEnabled?: boolean;
+  hotspotDataUsedMb?: number;
 }
 
 let guestConfig: GuestConfig | null = null;

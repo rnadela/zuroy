@@ -84,6 +84,8 @@ export class ReservationsService {
       .update(rawToken)
       .digest('hex');
 
+    const hotspot = this.generateHotspotCreds(reservation.room.number);
+
     const updated = await this.prisma.tenant.reservation.update({
       where: { id },
       data: {
@@ -91,6 +93,9 @@ export class ReservationsService {
         deviceId: dto.deviceId,
         provisioningToken: hashedToken,
         provisioningTokenExpiresAt: new Date(Date.now() + 5 * 60 * 1000),
+        hotspotSsid: hotspot.ssid,
+        hotspotPassword: hotspot.password,
+        hotspotEnabled: true,
       },
     });
 
@@ -115,7 +120,17 @@ export class ReservationsService {
         provisioningToken: null,
         provisioningTokenExpiresAt: null,
         deviceId: null,
+        hotspotEnabled: false,
+        hotspotSsid: null,
+        hotspotPassword: null,
+        hotspotDataUsedMb: 0,
       },
     });
+  }
+
+  private generateHotspotCreds(roomNumber: string) {
+    const ssid = `ZUROY-${roomNumber}-${crypto.randomBytes(4).toString('hex').toUpperCase().slice(0, 4)}`;
+    const password = crypto.randomBytes(6).toString('base64url').slice(0, 8);
+    return { ssid, password };
   }
 }

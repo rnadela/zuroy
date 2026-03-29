@@ -1,9 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Test } from '@nestjs/testing';
-import {
-  BadRequestException,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { ExtensionsService } from './extensions.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { CheckoutPurgeService } from '../queues/checkout-purge.service';

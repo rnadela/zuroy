@@ -91,6 +91,48 @@ export class DevicesService {
     });
   }
 
+  async updateDataUsage(
+    deviceId: string,
+    dataUsedMb: number,
+    deviceToken: string,
+  ) {
+    if (!deviceToken) throw new UnauthorizedException('Device token required');
+
+    const device = await this.prisma.device.findUnique({
+      where: { id: deviceId },
+    });
+    if (!device) throw new NotFoundException('Device not found');
+    if (!device.enrollmentCode)
+      throw new UnauthorizedException('Device has no enrollment code');
+
+    const valid = await bcrypt.compare(deviceToken, device.enrollmentCode);
+    if (!valid) throw new UnauthorizedException('Invalid device token');
+
+    const reservation = await this.prisma.reservation.findFirst({
+      where: { deviceId, status: 'CHECKED_IN' },
+      include: { hotel: true },
+    });
+    if (!reservation)
+      throw new NotFoundException('No active reservation for this device');
+
+    const hotspotEnabled =
+      reservation.hotel.hotspotDataCapMb &&
+      dataUsedMb >= reservation.hotel.hotspotDataCapMb
+        ? false
+        : reservation.hotspotEnabled;
+
+    await this.prisma.reservation.update({
+      where: { id: reservation.id },
+      data: { hotspotDataUsedMb: dataUsedMb, hotspotEnabled },
+    });
+
+    return {
+      hotspotEnabled,
+      dataUsedMb,
+      dataCapMb: reservation.hotel.hotspotDataCapMb ?? null,
+    };
+  }
+
   async provision(provisioningToken: string, deviceToken: string) {
     if (!deviceToken) throw new UnauthorizedException('Device token required');
 
@@ -122,7 +164,12 @@ export class DevicesService {
         provisioningTokenExpiresAt: { gt: new Date() },
         deviceId: null,
       },
-      include: { room: true, hotel: { select: HOTEL_SELECT } },
+      include: {
+        room: true,
+        hotel: {
+          select: { ...HOTEL_SELECT, hotspotDataCapMb: true },
+        },
+      },
     });
 
     if (!reservation)
@@ -141,7 +188,12 @@ export class DevicesService {
         provisioningToken: null,
         provisioningTokenExpiresAt: null,
       },
-      include: { room: true, hotel: { select: HOTEL_SELECT } },
+      include: {
+        room: true,
+        hotel: {
+          select: { ...HOTEL_SELECT, hotspotDataCapMb: true },
+        },
+      },
     });
   }
 }
