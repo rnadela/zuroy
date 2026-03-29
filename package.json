@@ -23,7 +23,8 @@
     "format": "prettier --write .",
     "db:generate": "turbo db:generate",
     "db:migrate": "turbo db:migrate",
-    "db:studio": "yarn workspace @zuroy/database db:studio"
+    "db:studio": "yarn workspace @zuroy/database db:studio",
+    "ship": "bash scripts/deploy.sh"
   },
   "devDependencies": {
     "prettier": "^3",

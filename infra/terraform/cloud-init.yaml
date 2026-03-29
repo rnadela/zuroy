@@ -1,0 +1,55 @@
+#cloud-config
+package_update: true
+package_upgrade: true
+
+packages:
+  - docker.io
+  - curl
+
+users:
+  - name: deploy
+    groups: docker
+    shell: /bin/bash
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    ssh_authorized_keys:
+      - ${ssh_public_key}
+
+runcmd:
+  - systemctl enable docker
+  - systemctl start docker
+
+  # Install Docker Compose V2
+  - mkdir -p /usr/local/lib/docker/cli-plugins
+  - curl -SL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64 -o /usr/local/lib/docker/cli-plugins/docker-compose
+  - chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+
+  - mkdir -p /opt/zuroy/backups
+  - chown -R deploy:deploy /opt/zuroy
+
+  - docker volume create postgres_data
+  - docker volume create caddy_data
+
+  # Setup daily backup cron (3 AM)
+  - |
+    cat > /opt/zuroy/backup.sh << 'BACKUP'
+    #!/bin/bash
+    set -e
+    cd /opt/zuroy
+    DATE=$$(date +%Y%m%d_%H%M%S)
+    BACKUP_FILE="backups/zuroy_$${DATE}.sql"
+
+    docker compose exec -T db pg_dump -U zuroy zuroy_prod > "$$BACKUP_FILE" || exit 1
+
+    head -1 "$$BACKUP_FILE" | grep -q "PostgreSQL database dump" || {
+      echo "Invalid backup!"
+      rm -f "$$BACKUP_FILE"
+      exit 1
+    }
+
+    gzip "$$BACKUP_FILE"
+    find backups -name "*.sql.gz" -mtime +7 -delete
+    echo "Backup completed: $${BACKUP_FILE}.gz"
+    BACKUP
+  - chmod +x /opt/zuroy/backup.sh
+  - chown deploy:deploy /opt/zuroy/backup.sh
+  - echo "0 3 * * * deploy /opt/zuroy/backup.sh >> /var/log/zuroy-backup.log 2>&1" > /etc/cron.d/zuroy-backup

@@ -1,0 +1,54 @@
+{
+    email admin@ralphnadela.com
+}
+
+# -- API --
+
+api.zuroy.com {
+    encode gzip
+
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        -Server
+    }
+
+    reverse_proxy api:3001 {
+        health_uri /v1/health
+        health_interval 30s
+    }
+}
+
+# -- Portal (Admin) --
+
+portal.zuroy.com {
+    encode gzip
+
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        -Server
+    }
+
+    reverse_proxy portal:3000
+}
+
+# -- Connect (Staff) --
+
+connect.zuroy.com {
+    encode gzip
+
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        -Server
+    }
+
+    reverse_proxy connect:3002
+}
