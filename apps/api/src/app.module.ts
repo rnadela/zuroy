@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ClsModule } from 'nestjs-cls';
 import { PrismaModule } from './prisma/prisma.module';
 import { RedisModule } from './redis/redis.module';
@@ -17,9 +17,11 @@ import { AmenitiesModule } from './amenities/amenities.module';
 import { ServicesModule } from './services/services.module';
 import { PartnersModule } from './partners/partners.module';
 import { ExtensionsModule } from './extensions/extensions.module';
+import { AuditModule } from './audit/audit.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { RolesGuard } from './auth/guards/roles.guard';
 import { TenantContextGuard } from './auth/guards/tenant-context.guard';
+import { AuditInterceptor } from './audit/audit.interceptor';
 
 @Module({
   imports: [
@@ -42,6 +44,7 @@ import { TenantContextGuard } from './auth/guards/tenant-context.guard';
     ServicesModule,
     PartnersModule,
     ExtensionsModule,
+    AuditModule,
   ],
   providers: [
     // Guard order matters: Throttler → JWT → Roles → TenantContext
@@ -49,6 +52,7 @@ import { TenantContextGuard } from './auth/guards/tenant-context.guard';
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
     { provide: APP_GUARD, useClass: TenantContextGuard },
+    { provide: APP_INTERCEPTOR, useClass: AuditInterceptor },
   ],
 })
 export class AppModule {}

@@ -242,3 +242,24 @@ enum StayExtensionStatus {
   APPROVED
   REJECTED
 }
+
+// ─── Audit Log ──────────────────────────────────────
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  actorEmail String?
+  actorRole  String?
+  action     String
+  resource   String
+  resourceId String?
+  hotelId    String?
+  metadata   Json?
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+
+  @@index([actorId])
+  @@index([resource, resourceId])
+  @@index([hotelId])
+  @@index([createdAt])
+}
