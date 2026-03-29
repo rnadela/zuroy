@@ -26,14 +26,47 @@ export default function LoginPage() {
   }
 
   return (
-    <Box className="flex min-h-screen items-center justify-center bg-gray-50">
-      <Card sx={{ width: 400 }}>
-        <CardContent>
-          <Typography variant="h5" className="mb-6 text-center font-bold">
-            Zuroy Portal
+    <Box
+      sx={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: '#0f172a',
+        backgroundImage: 'radial-gradient(circle at 1px 1px, #1e293b 1px, transparent 0)',
+        backgroundSize: '40px 40px',
+      }}
+    >
+      <Card sx={{ width: 420, border: '1px solid #334155' }}>
+        <CardContent sx={{ p: 4 }}>
+          <Typography
+            sx={{
+              fontWeight: 800,
+              letterSpacing: '0.15em',
+              color: '#3b82f6',
+              textTransform: 'uppercase',
+              fontSize: '0.9rem',
+              textAlign: 'center',
+              mb: 1,
+            }}
+          >
+            ZUROY
+          </Typography>
+          <Typography
+            variant="body2"
+            sx={{
+              color: '#64748b',
+              textAlign: 'center',
+              mb: 4,
+              textTransform: 'uppercase',
+              letterSpacing: '0.08em',
+              fontSize: '0.7rem',
+            }}
+          >
+            Admin Portal
           </Typography>
           {error && (
-            <Alert severity="error" className="mb-4">
+            <Alert severity="error" sx={{ mb: 3 }}>
               {error}
             </Alert>
           )}
@@ -54,7 +87,18 @@ export default function LoginPage() {
               required
               fullWidth
             />
-            <Button type="submit" variant="contained" size="large" disabled={loading} fullWidth>
+            <Button
+              type="submit"
+              variant="contained"
+              size="large"
+              disabled={loading}
+              fullWidth
+              sx={{
+                mt: 1,
+                boxShadow: '0 0 20px rgba(59,130,246,0.3)',
+                '&:hover': { boxShadow: '0 0 30px rgba(59,130,246,0.5)' },
+              }}
+            >
               {loading ? 'Signing in...' : 'Sign In'}
             </Button>
           </form>

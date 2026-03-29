@@ -8,7 +8,12 @@ export interface HotelTheme {
   backgroundUrl?: string;
 }
 
-const DEFAULT_THEME: HotelTheme = { primary: '#1a56db', secondary: '#7c3aed' };
+const DEFAULT_THEME: HotelTheme = {
+  primary: '#1a1a2e',
+  secondary: '#c9a84c',
+  logoUrl: undefined,
+  backgroundUrl: undefined,
+};
 
 interface ThemeCtx {
   theme: HotelTheme;

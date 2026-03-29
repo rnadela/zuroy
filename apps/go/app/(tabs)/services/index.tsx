@@ -10,12 +10,20 @@ import {
 import { useRouter } from 'expo-router';
 import { api } from '../../../src/lib/api';
 import { getConfig } from '../../../src/lib/store';
+import { useTheme } from '../../../src/context/ThemeContext';
+
+const GOLD = '#c9a84c';
+const CREAM = '#f5f0e8';
+const MUTED = '#8a8578';
+const DARK = '#1a1a2e';
+const CARD_BG = '#222240';
 
 export default function ServicesScreen() {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const config = getConfig();
+  const { theme } = useTheme();
 
   useEffect(() => {
     if (!config) return;
@@ -27,8 +35,8 @@ export default function ServicesScreen() {
 
   if (loading)
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" />
+      <View style={[styles.center, { backgroundColor: theme.primary || DARK }]}>
+        <ActivityIndicator size="large" color={theme.secondary || GOLD} />
       </View>
     );
 
@@ -38,21 +46,24 @@ export default function ServicesScreen() {
     <FlatList
       data={categories}
       keyExtractor={(c) => c}
+      style={{ backgroundColor: theme.primary || DARK }}
       contentContainerStyle={styles.list}
       renderItem={({ item: category }) => (
         <View style={styles.section}>
-          <Text style={styles.category}>{category}</Text>
+          <Text style={[styles.category, { color: theme.secondary || GOLD }]}>{category}</Text>
           {items
             .filter((i) => i.category === category && i.available)
-            .map((item) => (
+            .map((item, idx, arr) => (
               <TouchableOpacity
                 key={item.id}
-                style={styles.item}
+                style={[styles.item, idx < arr.length - 1 && styles.itemBorder]}
                 onPress={() => router.push(`/services/${item.id}`)}
               >
                 <View style={styles.itemRow}>
                   <Text style={styles.itemName}>{item.name}</Text>
-                  <Text style={styles.itemPrice}>${Number(item.price).toFixed(2)}</Text>
+                  <Text style={[styles.itemPrice, { color: theme.secondary || GOLD }]}>
+                    ${Number(item.price).toFixed(2)}
+                  </Text>
                 </View>
                 {item.description && <Text style={styles.itemDesc}>{item.description}</Text>}
               </TouchableOpacity>
@@ -65,21 +76,29 @@ export default function ServicesScreen() {
 
 const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  list: { padding: 16 },
-  section: { marginBottom: 24 },
-  category: { fontSize: 20, fontWeight: 'bold', marginBottom: 12, color: '#374151' },
-  item: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 8,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+  list: { padding: 20 },
+  section: { marginBottom: 28 },
+  category: {
+    fontSize: 13,
+    fontWeight: '600',
+    letterSpacing: 4,
+    textTransform: 'uppercase',
+    marginBottom: 12,
   },
+  item: {
+    backgroundColor: CARD_BG,
+    borderRadius: 20,
+    padding: 18,
+    marginBottom: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
+  },
+  itemBorder: {},
   itemRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  itemName: { fontSize: 16, fontWeight: '500' },
-  itemPrice: { fontSize: 16, fontWeight: '600', color: '#1a56db' },
-  itemDesc: { fontSize: 14, color: '#6b7280', marginTop: 4 },
+  itemName: { fontSize: 16, fontWeight: '400', color: CREAM },
+  itemPrice: { fontSize: 16, fontWeight: '600' },
+  itemDesc: { fontSize: 14, color: MUTED, marginTop: 6 },
 });

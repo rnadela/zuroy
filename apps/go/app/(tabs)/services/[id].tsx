@@ -13,6 +13,11 @@ import { api } from '../../../src/lib/api';
 import { getConfig } from '../../../src/lib/store';
 import { useTheme } from '../../../src/context/ThemeContext';
 
+const GOLD = '#c9a84c';
+const CREAM = '#f5f0e8';
+const MUTED = '#8a8578';
+const DARK = '#1a1a2e';
+
 export default function ServiceDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [item, setItem] = useState<any>(null);
@@ -20,6 +25,7 @@ export default function ServiceDetailScreen() {
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(true);
   const [ordering, setOrdering] = useState(false);
+  const [inputFocus, setInputFocus] = useState<string | null>(null);
   const config = getConfig();
   const router = useRouter();
   const { theme } = useTheme();
@@ -55,45 +61,59 @@ export default function ServiceDetailScreen() {
 
   if (loading)
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" />
+      <View style={[styles.center, { backgroundColor: theme.primary || DARK }]}>
+        <ActivityIndicator size="large" color={theme.secondary || GOLD} />
       </View>
     );
   if (!item)
     return (
-      <View style={styles.center}>
-        <Text>Item not found</Text>
+      <View style={[styles.center, { backgroundColor: theme.primary || DARK }]}>
+        <Text style={{ color: CREAM }}>Item not found</Text>
       </View>
     );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.primary || DARK }]}>
       <Text style={styles.name}>{item.name}</Text>
-      <Text style={[styles.price, { color: theme.primary }]}>${Number(item.price).toFixed(2)}</Text>
+      <Text style={[styles.price, { color: theme.secondary || GOLD }]}>
+        ${Number(item.price).toFixed(2)}
+      </Text>
       {item.description && <Text style={styles.desc}>{item.description}</Text>}
+
       <Text style={styles.label}>Quantity</Text>
       <TextInput
-        style={styles.input}
+        style={[styles.input, inputFocus === 'qty' && styles.inputFocused]}
         value={quantity}
         onChangeText={setQuantity}
         keyboardType="numeric"
+        placeholderTextColor={MUTED}
+        onFocus={() => setInputFocus('qty')}
+        onBlur={() => setInputFocus(null)}
       />
+
       <Text style={styles.label}>Notes (optional)</Text>
       <TextInput
-        style={[styles.input, { height: 80 }]}
+        style={[styles.input, { height: 80 }, inputFocus === 'notes' && styles.inputFocused]}
         value={notes}
         onChangeText={setNotes}
         multiline
+        placeholderTextColor={MUTED}
+        onFocus={() => setInputFocus('notes')}
+        onBlur={() => setInputFocus(null)}
       />
-      <Text style={styles.total}>
+
+      <Text style={[styles.total, { color: theme.secondary || GOLD }]}>
         Total: ${(Number(item.price) * (parseInt(quantity) || 1)).toFixed(2)}
       </Text>
+
       <TouchableOpacity
-        style={[styles.button, { backgroundColor: theme.primary }]}
+        style={[styles.button, { backgroundColor: theme.secondary || GOLD }]}
         onPress={handleOrder}
         disabled={ordering}
       >
-        <Text style={styles.buttonText}>{ordering ? 'Placing Order...' : 'Place Order'}</Text>
+        <Text style={[styles.buttonText, { color: theme.primary || DARK }]}>
+          {ordering ? 'Placing Order...' : 'Place Order'}
+        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -101,25 +121,42 @@ export default function ServiceDetailScreen() {
 
 const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  container: { flex: 1, padding: 24, backgroundColor: '#f9fafb' },
-  name: { fontSize: 24, fontWeight: 'bold', marginBottom: 8 },
-  price: { fontSize: 20, fontWeight: '600', marginBottom: 12 },
-  desc: { fontSize: 16, color: '#6b7280', marginBottom: 24 },
-  label: { fontSize: 14, fontWeight: '500', color: '#374151', marginBottom: 4 },
-  input: {
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 16,
-    backgroundColor: '#fff',
-    fontSize: 16,
+  container: { flex: 1, padding: 24 },
+  name: { fontSize: 28, fontWeight: '300', color: CREAM, marginBottom: 8, letterSpacing: 1 },
+  price: { fontSize: 22, fontWeight: '600', marginBottom: 16 },
+  desc: { fontSize: 16, color: MUTED, marginBottom: 28, lineHeight: 24 },
+  label: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: MUTED,
+    marginBottom: 6,
+    letterSpacing: 2,
+    textTransform: 'uppercase',
   },
-  total: { fontSize: 18, fontWeight: '700', marginBottom: 16 },
+  input: {
+    borderWidth: 0,
+    borderBottomWidth: 1,
+    borderBottomColor: '#2a2a4e',
+    padding: 14,
+    marginBottom: 20,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    fontSize: 16,
+    color: CREAM,
+  },
+  inputFocused: {
+    borderBottomColor: GOLD,
+    borderBottomWidth: 2,
+  },
+  total: { fontSize: 20, fontWeight: '600', marginBottom: 20, letterSpacing: 1 },
   button: {
-    paddingVertical: 14,
+    paddingVertical: 16,
     borderRadius: 8,
     alignItems: 'center',
   },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  buttonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+  },
 });
