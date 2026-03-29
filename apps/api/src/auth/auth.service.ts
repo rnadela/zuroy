@@ -5,7 +5,9 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
+import { JwtBlacklistService } from './jwt-blacklist.service';
 import type { JwtPayload, LoginDto, RegisterDto } from '@zuroy/shared';
 
 @Injectable()
@@ -13,6 +15,7 @@ export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
+    private readonly blacklist: JwtBlacklistService,
   ) {}
 
   async login(dto: LoginDto) {
@@ -61,6 +64,7 @@ export class AuthService {
       email: user.email,
       role: user.role,
       hotelId: user.hotelId ?? undefined,
+      jti: crypto.randomUUID(),
     };
 
     return {
@@ -73,5 +77,12 @@ export class AuthService {
         role: user.role,
       },
     };
+  }
+
+  async logout(jti: string, exp: number) {
+    const ttl = exp - Math.floor(Date.now() / 1000);
+    if (ttl > 0) {
+      await this.blacklist.blacklist(jti, ttl);
+    }
   }
 }

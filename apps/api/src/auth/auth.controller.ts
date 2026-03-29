@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UsePipes } from '@nestjs/common';
+import { Controller, Post, Body, Req, UsePipes } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { Public } from './decorators/public.decorator';
 import { Roles } from './decorators/roles.decorator';
@@ -22,5 +22,11 @@ export class AuthController {
   @UsePipes(new ZodValidationPipe(registerSchema))
   async register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
+  }
+
+  @Post('logout')
+  async logout(@Req() req: { user: { jti: string; exp: number } }) {
+    await this.authService.logout(req.user.jti, req.user.exp);
+    return { message: 'Logged out' };
   }
 }

@@ -5,6 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { CheckoutPurgeService } from '../queues/checkout-purge.service';
 import {
   CheckInDto,
   CreateReservationDto,
@@ -13,7 +14,10 @@ import {
 
 @Injectable()
 export class ReservationsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly checkoutPurge: CheckoutPurgeService,
+  ) {}
 
   async findAll(
     hotelId: string,
@@ -80,7 +84,7 @@ export class ReservationsService {
       .update(rawToken)
       .digest('hex');
 
-    await this.prisma.tenant.reservation.update({
+    const updated = await this.prisma.tenant.reservation.update({
       where: { id },
       data: {
         status: 'CHECKED_IN',
@@ -89,6 +93,8 @@ export class ReservationsService {
         provisioningTokenExpiresAt: new Date(Date.now() + 5 * 60 * 1000),
       },
     });
+
+    await this.checkoutPurge.scheduleCheckoutPurge(id, updated.checkOut);
 
     return { provisioningToken: rawToken };
   }
@@ -99,6 +105,8 @@ export class ReservationsService {
     if (reservation.status !== 'CHECKED_IN') {
       throw new BadRequestException('Reservation is not in CHECKED_IN status');
     }
+
+    await this.checkoutPurge.cancelCheckoutPurge(id);
 
     return this.prisma.tenant.reservation.update({
       where: { id },

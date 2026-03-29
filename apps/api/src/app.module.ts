@@ -4,7 +4,9 @@ import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { ClsModule } from 'nestjs-cls';
 import { PrismaModule } from './prisma/prisma.module';
+import { RedisModule } from './redis/redis.module';
 import { AuthModule } from './auth/auth.module';
+import { QueuesModule } from './queues/queues.module';
 import { HealthModule } from './health/health.module';
 import { HotelsModule } from './hotels/hotels.module';
 import { UsersModule } from './users/users.module';
@@ -26,7 +28,9 @@ import { TenantContextGuard } from './auth/guards/tenant-context.guard';
       throttlers: [{ ttl: 60000, limit: 100 }],
     }),
     PrismaModule,
+    RedisModule,
     AuthModule,
+    QueuesModule,
     HealthModule,
     HotelsModule,
     UsersModule,

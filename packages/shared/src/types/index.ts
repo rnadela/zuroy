@@ -16,6 +16,7 @@ export interface JwtPayload {
   email: string;
   role: string;
   hotelId?: string;
+  jti?: string;
   iat?: number;
   exp?: number;
 }
