@@ -6,6 +6,24 @@ export default defineConfig({
     globals: true,
     root: './',
     setupFiles: ['./test/setup.ts'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'html', 'lcov', 'json-summary'],
+      reportsDirectory: './coverage',
+      include: ['src/**/*.ts'],
+      exclude: [
+        'src/**/*.spec.ts',
+        'src/**/*.module.ts',
+        'src/**/dto/**',
+        'src/main.ts',
+      ],
+      thresholds: {
+        lines: 80,
+        functions: 80,
+        branches: 75,
+        statements: 80,
+      },
+    },
   },
   plugins: [swc.vite({ module: { type: 'es6' } })],
 });

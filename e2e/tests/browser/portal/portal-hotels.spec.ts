@@ -1,42 +1,44 @@
 import { test, expect } from '../../../browser-fixtures';
 
 const uid = Date.now();
+const hotelName = `E2E Hotel ${uid}`;
+const hotelSlug = `e2e-hotel-${uid}`;
 
-test.describe('Portal Hotels', () => {
-  test('hotels page loads', async ({ adminPage: page }) => {
+test.describe('Portal Hotels Full CRUD', () => {
+  test('1. hotels list page shows seeded hotel', async ({ adminPage: page }) => {
     await page.goto('/hotels');
     await page.waitForLoadState('networkidle');
-    await expect(page.locator('body')).toContainText('Hotel', { timeout: 30000 });
+    await expect(page.locator('body')).toContainText('Test Beach Resort', { timeout: 15000 });
   });
 
-  test('can navigate to new hotel form', async ({ adminPage: page }) => {
+  test('2. create new hotel via form', async ({ adminPage: page }) => {
     await page.goto('/hotels/new');
     await page.waitForLoadState('networkidle');
-    await expect(page.locator('input').first()).toBeVisible({ timeout: 30000 });
+    await page.getByLabel('Name').fill(hotelName);
+    await page.getByLabel('Slug').fill(hotelSlug);
+    await page.getByLabel('Address').fill('123 E2E Street');
+    await page.getByRole('button', { name: /create hotel/i }).click();
+    // Redirects to /hotels
+    await expect(page).toHaveURL(/\/hotels$/, { timeout: 15000 });
   });
 
-  test('can create a hotel via form', async ({ adminPage: page }) => {
-    await page.goto('/hotels/new');
+  test('3. new hotel appears in list', async ({ adminPage: page }) => {
+    await page.goto('/hotels');
     await page.waitForLoadState('networkidle');
-    const inputs = page.locator('input[type="text"]');
-    await inputs.first().fill(`E2E Hotel ${uid}`);
-    await inputs.nth(1).fill(`e2e-hotel-${uid}`);
-    await page.getByRole('button', { name: /create|save|submit/i }).click();
-    // Wait for redirect OR success message (client-side nav)
-    await expect(page.locator('body')).toContainText(/hotels|created|success/i, { timeout: 15000 });
+    await expect(page.locator('body')).toContainText(hotelName, { timeout: 10000 });
   });
 
-  test('duplicate slug shows error', async ({ adminPage: page }) => {
+  test('4. duplicate slug shows error', async ({ adminPage: page }) => {
     await page.goto('/hotels/new');
     await page.waitForLoadState('networkidle');
-    const inputs = page.locator('input[type="text"]');
-    await inputs.first().fill('Duplicate Hotel');
-    await inputs.nth(1).fill('test-beach-resort');
-    await page.getByRole('button', { name: /create|save|submit/i }).click();
-    // Should show error alert or stay on form (not redirect to /hotels)
+    await page.getByLabel('Name').fill('Duplicate Test');
+    await page.getByLabel('Slug').fill('test-beach-resort'); // seeded slug
+    await page.getByLabel('Address').fill('123 Test');
+    await page.getByRole('button', { name: /create hotel/i }).click();
     await page.waitForTimeout(3000);
-    const onNewPage = page.url().includes('/hotels/new');
-    const hasError = await page.locator('.MuiAlert-root').first().isVisible().catch(() => false);
-    expect(onNewPage || hasError).toBeTruthy();
+    // Stays on form OR shows alert
+    const onFormPage = page.url().includes('/hotels/new');
+    const hasAlert = await page.locator('.MuiAlert-root').first().isVisible().catch(() => false);
+    expect(onFormPage || hasAlert).toBeTruthy();
   });
 });
