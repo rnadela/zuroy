@@ -39,14 +39,21 @@ export default function NewHotelPage() {
     try {
       setLoading(true);
       setError('');
+      const payload: Record<string, unknown> = {
+        name: form.name,
+        slug: form.slug,
+      };
+      if (form.address) payload.address = form.address;
+      if (form.latitude) payload.latitude = parseFloat(form.latitude);
+      if (form.longitude) payload.longitude = parseFloat(form.longitude);
+      if (form.logoUrl) payload.logoUrl = form.logoUrl;
+      if (form.primaryColor) payload.primaryColor = form.primaryColor;
+      if (form.secondaryColor) payload.secondaryColor = form.secondaryColor;
+      if (form.backgroundUrl) payload.backgroundUrl = form.backgroundUrl;
       await api('/hotels', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...form,
-          latitude: form.latitude ? parseFloat(form.latitude) : undefined,
-          longitude: form.longitude ? parseFloat(form.longitude) : undefined,
-        }),
+        body: JSON.stringify(payload),
       });
       router.push('/hotels');
     } catch (err: any) {

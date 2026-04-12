@@ -19,22 +19,12 @@ test.describe('Connect Amenities Full Flow', () => {
     await page.goto('/amenities/new');
     await page.waitForLoadState('networkidle');
     await page.getByLabel(/name/i).first().fill(`E2E Amenity ${uid}`);
-    // Fill description if visible
-    const descField = page.getByLabel(/description/i);
-    if (await descField.isVisible().catch(() => false)) {
-      await descField.fill('E2E test amenity');
-    }
-    // Find category select and set value
-    const categorySelect = page.getByLabel(/category/i);
-    if (await categorySelect.isVisible().catch(() => false)) {
-      await categorySelect.click();
-      await page.getByRole('option').first().click().catch(() => {});
-    }
-    await page.getByRole('button', { name: /create|save/i }).first().click();
-    await page.waitForTimeout(3000);
-    // Either redirected to /amenities OR stayed with error
-    const done = page.url().includes('/amenities') && !page.url().includes('/new');
-    const hasError = await page.locator('.MuiAlert-root').first().isVisible().catch(() => false);
-    expect(done || hasError).toBeTruthy();
+    await page.getByLabel(/description/i).fill('E2E test amenity');
+    // MUI Select: click the select trigger div and pick first option
+    await page.locator('div[role="combobox"]').first().click();
+    await page.getByRole('option').first().click();
+    await page.getByRole('button', { name: /create amenity/i }).click();
+    // Should redirect to /amenities (list)
+    await expect(page).toHaveURL(/\/amenities$/, { timeout: 15000 });
   });
 });

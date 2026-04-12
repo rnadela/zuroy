@@ -75,6 +75,7 @@ export class AuthService {
         firstName: user.firstName,
         lastName: user.lastName,
         role: user.role,
+        hotelId: user.hotelId ?? undefined,
       },
     };
   }
