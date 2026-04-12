@@ -168,4 +168,24 @@ describe('ServiceRequestsService', () => {
       expect(result.requests).toEqual([]);
     });
   });
+
+  describe('findByHotel', () => {
+    it('should filter by hotelId only', async () => {
+      prisma.tenant.serviceRequest.findMany.mockResolvedValue([]);
+      await service.findByHotel('h1');
+      expect(prisma.tenant.serviceRequest.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { hotelId: 'h1' } }),
+      );
+    });
+
+    it('should filter by hotelId and status', async () => {
+      prisma.tenant.serviceRequest.findMany.mockResolvedValue([]);
+      await service.findByHotel('h1', 'PENDING');
+      expect(prisma.tenant.serviceRequest.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { hotelId: 'h1', status: 'PENDING' },
+        }),
+      );
+    });
+  });
 });

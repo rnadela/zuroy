@@ -1,6 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Test } from '@nestjs/testing';
-import { NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  NotFoundException,
+  UnauthorizedException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { DevicesService } from './devices.service';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -20,6 +24,10 @@ describe('DevicesService', () => {
       update: vi.fn(),
       findUnique: vi.fn(),
       findMany: vi.fn(),
+    },
+    reservation: {
+      findFirst: vi.fn(),
+      update: vi.fn(),
     },
     tenant: {
       device: {
@@ -162,6 +170,218 @@ describe('DevicesService', () => {
         },
       });
       expect(result).toEqual(updated);
+    });
+
+    it('should throw when device has no enrollmentCode', async () => {
+      prisma.device.findUnique.mockResolvedValue({
+        id: 'd1',
+        enrollmentCode: null,
+      });
+      await expect(
+        service.heartbeat('d1', { batteryLevel: 80 }, 'token'),
+      ).rejects.toThrow(UnauthorizedException);
+    });
+  });
+
+  describe('findOne', () => {
+    it('should return device when found', async () => {
+      const device = { id: 'd1' };
+      prisma.tenant.device.findUnique.mockResolvedValue(device);
+      const result = await service.findOne('d1');
+      expect(result).toEqual(device);
+    });
+
+    it('should throw NotFoundException when missing', async () => {
+      prisma.tenant.device.findUnique.mockResolvedValue(null);
+      await expect(service.findOne('missing')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+  });
+
+  describe('updateDataUsage', () => {
+    it('should throw when no token', async () => {
+      await expect(service.updateDataUsage('d1', 10, '')).rejects.toThrow(
+        UnauthorizedException,
+      );
+    });
+
+    it('should throw when device not found', async () => {
+      prisma.device.findUnique.mockResolvedValue(null);
+      await expect(service.updateDataUsage('d1', 10, 'tok')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('should throw when device has no enrollmentCode', async () => {
+      prisma.device.findUnique.mockResolvedValue({
+        id: 'd1',
+        enrollmentCode: null,
+      });
+      await expect(service.updateDataUsage('d1', 10, 'tok')).rejects.toThrow(
+        UnauthorizedException,
+      );
+    });
+
+    it('should throw when token invalid', async () => {
+      prisma.device.findUnique.mockResolvedValue({
+        id: 'd1',
+        enrollmentCode: 'hashed',
+      });
+      vi.mocked(bcrypt.compare).mockResolvedValue(false as never);
+      await expect(service.updateDataUsage('d1', 10, 'bad')).rejects.toThrow(
+        UnauthorizedException,
+      );
+    });
+
+    it('should throw when no active reservation', async () => {
+      prisma.device.findUnique.mockResolvedValue({
+        id: 'd1',
+        enrollmentCode: 'hashed',
+      });
+      vi.mocked(bcrypt.compare).mockResolvedValue(true as never);
+      prisma.reservation.findFirst.mockResolvedValue(null);
+      await expect(service.updateDataUsage('d1', 10, 'tok')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('should disable hotspot when cap exceeded', async () => {
+      prisma.device.findUnique.mockResolvedValue({
+        id: 'd1',
+        enrollmentCode: 'hashed',
+      });
+      vi.mocked(bcrypt.compare).mockResolvedValue(true as never);
+      prisma.reservation.findFirst.mockResolvedValue({
+        id: 'r1',
+        hotspotEnabled: true,
+        hotel: { hotspotDataCapMb: 100 },
+      });
+      prisma.reservation.update.mockResolvedValue({});
+
+      const result = await service.updateDataUsage('d1', 150, 'tok');
+
+      expect(result.hotspotEnabled).toBe(false);
+      expect(result.dataUsedMb).toBe(150);
+      expect(result.dataCapMb).toBe(100);
+      expect(prisma.reservation.update).toHaveBeenCalledWith({
+        where: { id: 'r1' },
+        data: { hotspotDataUsedMb: 150, hotspotEnabled: false },
+      });
+    });
+
+    it('should keep hotspot enabled when under cap', async () => {
+      prisma.device.findUnique.mockResolvedValue({
+        id: 'd1',
+        enrollmentCode: 'hashed',
+      });
+      vi.mocked(bcrypt.compare).mockResolvedValue(true as never);
+      prisma.reservation.findFirst.mockResolvedValue({
+        id: 'r1',
+        hotspotEnabled: true,
+        hotel: { hotspotDataCapMb: 100 },
+      });
+      prisma.reservation.update.mockResolvedValue({});
+
+      const result = await service.updateDataUsage('d1', 50, 'tok');
+      expect(result.hotspotEnabled).toBe(true);
+    });
+
+    it('should handle null hotspotDataCapMb', async () => {
+      prisma.device.findUnique.mockResolvedValue({
+        id: 'd1',
+        enrollmentCode: 'hashed',
+      });
+      vi.mocked(bcrypt.compare).mockResolvedValue(true as never);
+      prisma.reservation.findFirst.mockResolvedValue({
+        id: 'r1',
+        hotspotEnabled: true,
+        hotel: { hotspotDataCapMb: null },
+      });
+      prisma.reservation.update.mockResolvedValue({});
+
+      const result = await service.updateDataUsage('d1', 50, 'tok');
+      expect(result.dataCapMb).toBe(null);
+    });
+  });
+
+  describe('provision', () => {
+    it('should throw when no token', async () => {
+      await expect(service.provision('pt', '')).rejects.toThrow(
+        UnauthorizedException,
+      );
+    });
+
+    it('should throw when no device matches', async () => {
+      prisma.device.findMany.mockResolvedValue([
+        { id: 'd1', enrollmentCode: 'hashed' },
+      ]);
+      vi.mocked(bcrypt.compare).mockResolvedValue(false as never);
+      await expect(service.provision('pt', 'bad')).rejects.toThrow(
+        UnauthorizedException,
+      );
+    });
+
+    it('should throw when no reservation matches token', async () => {
+      prisma.device.findMany.mockResolvedValue([
+        { id: 'd1', enrollmentCode: 'hashed', hotelId: 'h1' },
+      ]);
+      vi.mocked(bcrypt.compare).mockResolvedValue(true as never);
+      prisma.reservation.findFirst.mockResolvedValue(null);
+      await expect(service.provision('pt', 'tok')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('should throw when device hotel mismatch', async () => {
+      prisma.device.findMany.mockResolvedValue([
+        { id: 'd1', enrollmentCode: 'hashed', hotelId: 'h1' },
+      ]);
+      vi.mocked(bcrypt.compare).mockResolvedValue(true as never);
+      prisma.reservation.findFirst.mockResolvedValue({
+        id: 'r1',
+        hotelId: 'h2',
+      });
+      await expect(service.provision('pt', 'tok')).rejects.toThrow(
+        ForbiddenException,
+      );
+    });
+
+    it('should bind device to reservation on success', async () => {
+      prisma.device.findMany.mockResolvedValue([
+        { id: 'd1', enrollmentCode: 'hashed', hotelId: 'h1' },
+      ]);
+      vi.mocked(bcrypt.compare).mockResolvedValue(true as never);
+      prisma.reservation.findFirst.mockResolvedValue({
+        id: 'r1',
+        hotelId: 'h1',
+      });
+      const updated = { id: 'r1', deviceId: 'd1' };
+      prisma.reservation.update.mockResolvedValue(updated);
+
+      const result = await service.provision('pt', 'tok');
+      expect(prisma.reservation.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'r1' },
+          data: expect.objectContaining({ deviceId: 'd1' }),
+        }),
+      );
+      expect(result).toEqual(updated);
+    });
+
+    it('should skip devices with null enrollmentCode', async () => {
+      prisma.device.findMany.mockResolvedValue([
+        { id: 'd0', enrollmentCode: null },
+        { id: 'd1', enrollmentCode: 'hashed', hotelId: 'h1' },
+      ]);
+      vi.mocked(bcrypt.compare).mockResolvedValue(true as never);
+      prisma.reservation.findFirst.mockResolvedValue({
+        id: 'r1',
+        hotelId: 'h1',
+      });
+      prisma.reservation.update.mockResolvedValue({});
+      await service.provision('pt', 'tok');
+      expect(bcrypt.compare).toHaveBeenCalledTimes(1);
     });
   });
 });

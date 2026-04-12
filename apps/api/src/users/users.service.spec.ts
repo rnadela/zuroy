@@ -159,4 +159,20 @@ describe('UsersService', () => {
       expect(result).toEqual(mockUser);
     });
   });
+
+  describe('update', () => {
+    it('should update existing user', async () => {
+      prisma.user.findUnique.mockResolvedValue(mockUser);
+      prisma.user.update.mockResolvedValue({ ...mockUser, firstName: 'Jan' });
+      const result = await service.update('user-1', {
+        firstName: 'Jan',
+      } as any);
+      expect(prisma.user.update).toHaveBeenCalledWith({
+        where: { id: 'user-1' },
+        data: { firstName: 'Jan' },
+        select: expect.objectContaining({ id: true }),
+      });
+      expect(result.firstName).toBe('Jan');
+    });
+  });
 });

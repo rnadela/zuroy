@@ -175,4 +175,58 @@ describe('ReservationsService', () => {
       );
     });
   });
+
+  describe('findAll', () => {
+    it('should filter by hotelId', async () => {
+      prisma.tenant.reservation.findMany.mockResolvedValue([]);
+      await service.findAll('hotel-1');
+      expect(prisma.tenant.reservation.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { hotelId: 'hotel-1' } }),
+      );
+    });
+
+    it('should apply status, from, to, cursor', async () => {
+      prisma.tenant.reservation.findMany.mockResolvedValue([]);
+      await service.findAll('hotel-1', {
+        status: 'PENDING',
+        from: '2026-01-01',
+        to: '2026-12-31',
+        cursor: 'res-prev',
+      });
+      const call = prisma.tenant.reservation.findMany.mock.calls[0][0];
+      expect(call.where.hotelId).toBe('hotel-1');
+      expect(call.where.status).toBe('PENDING');
+      expect(call.where.checkIn.gte).toBeInstanceOf(Date);
+      expect(call.where.checkIn.lte).toBeInstanceOf(Date);
+      expect(call.skip).toBe(1);
+      expect(call.cursor).toEqual({ id: 'res-prev' });
+    });
+  });
+
+  describe('findOne', () => {
+    it('should return reservation with room', async () => {
+      prisma.tenant.reservation.findUnique.mockResolvedValue(mockReservation);
+      const result = await service.findOne('res-1');
+      expect(result).toEqual(mockReservation);
+    });
+
+    it('should throw when not found', async () => {
+      prisma.tenant.reservation.findUnique.mockResolvedValue(null);
+      await expect(service.findOne('nope')).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('update', () => {
+    it('should update existing reservation', async () => {
+      prisma.tenant.reservation.findUnique.mockResolvedValue(mockReservation);
+      prisma.tenant.reservation.update.mockResolvedValue({
+        ...mockReservation,
+        guestName: 'Updated',
+      });
+      const result = await service.update('res-1', {
+        guestName: 'Updated',
+      } as any);
+      expect(result.guestName).toBe('Updated');
+    });
+  });
 });

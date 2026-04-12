@@ -84,4 +84,18 @@ describe('AuditService', () => {
       expect(result).toEqual(logs);
     });
   });
+
+  describe('findByActor', () => {
+    it('should query by actorId', async () => {
+      const logs = [{ id: 'log1', actorId: 'u1' }];
+      prisma.auditLog.findMany.mockResolvedValue(logs);
+      const result = await service.findByActor('u1');
+      expect(prisma.auditLog.findMany).toHaveBeenCalledWith({
+        where: { actorId: 'u1' },
+        orderBy: { createdAt: 'desc' },
+        take: 50,
+      });
+      expect(result).toEqual(logs);
+    });
+  });
 });

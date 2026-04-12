@@ -148,4 +148,30 @@ describe('AuthService', () => {
       ).rejects.toThrow(ConflictException);
     });
   });
+
+  describe('logout', () => {
+    it('should blacklist jti when ttl is positive', async () => {
+      const blacklist = vi.fn();
+      (
+        service as unknown as { blacklist: { blacklist: typeof blacklist } }
+      ).blacklist = {
+        blacklist,
+      };
+      const exp = Math.floor(Date.now() / 1000) + 3600;
+      await service.logout('jti-1', exp);
+      expect(blacklist).toHaveBeenCalled();
+    });
+
+    it('should not blacklist when ttl is zero or negative', async () => {
+      const blacklist = vi.fn();
+      (
+        service as unknown as { blacklist: { blacklist: typeof blacklist } }
+      ).blacklist = {
+        blacklist,
+      };
+      const exp = Math.floor(Date.now() / 1000) - 10;
+      await service.logout('jti-1', exp);
+      expect(blacklist).not.toHaveBeenCalled();
+    });
+  });
 });

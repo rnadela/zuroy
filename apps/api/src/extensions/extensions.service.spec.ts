@@ -164,4 +164,38 @@ describe('ExtensionsService', () => {
       ).rejects.toThrow(NotFoundException);
     });
   });
+
+  describe('findByHotel', () => {
+    it('should filter by hotelId', async () => {
+      prisma.tenant.stayExtension.findMany.mockResolvedValue([]);
+      await service.findByHotel('h1');
+      expect(prisma.tenant.stayExtension.findMany).toHaveBeenCalledWith({
+        where: { hotelId: 'h1' },
+        include: { reservation: { include: { room: true } } },
+        orderBy: { createdAt: 'desc' },
+      });
+    });
+
+    it('should filter by status', async () => {
+      prisma.tenant.stayExtension.findMany.mockResolvedValue([]);
+      await service.findByHotel('h1', 'PENDING');
+      expect(prisma.tenant.stayExtension.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { hotelId: 'h1', status: 'PENDING' },
+        }),
+      );
+    });
+  });
+
+  describe('findByReservation', () => {
+    it('should return extensions for reservation', async () => {
+      prisma.tenant.stayExtension.findMany.mockResolvedValue([{ id: 'e1' }]);
+      const result = await service.findByReservation('r1');
+      expect(result).toEqual([{ id: 'e1' }]);
+      expect(prisma.tenant.stayExtension.findMany).toHaveBeenCalledWith({
+        where: { reservationId: 'r1' },
+        orderBy: { createdAt: 'desc' },
+      });
+    });
+  });
 });

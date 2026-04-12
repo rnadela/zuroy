@@ -124,4 +124,58 @@ describe('PartnersService', () => {
       });
     });
   });
+
+  describe('findNearby (via findAll)', () => {
+    it('should call $queryRaw when lat/lng provided', async () => {
+      prisma.$queryRaw.mockResolvedValue([{ id: 'p1', distanceKm: 5 }]);
+      const result = await service.findAll({ lat: 10, lng: 20 });
+      expect(prisma.$queryRaw).toHaveBeenCalled();
+      expect(result).toEqual([{ id: 'p1', distanceKm: 5 }]);
+    });
+
+    it('should include category filter in $queryRaw', async () => {
+      prisma.$queryRaw.mockResolvedValue([]);
+      await service.findAll({
+        lat: 10,
+        lng: 20,
+        radius: 50,
+        category: 'DINING',
+      });
+      expect(prisma.$queryRaw).toHaveBeenCalled();
+    });
+  });
+
+  describe('update', () => {
+    it('should update existing partner', async () => {
+      prisma.partner.findUnique.mockResolvedValue({ id: 'p1' });
+      const updated = { id: 'p1', name: 'Updated' };
+      prisma.partner.update.mockResolvedValue(updated);
+      const result = await service.update('p1', { name: 'Updated' } as any);
+      expect(result).toEqual(updated);
+    });
+
+    it('should throw when partner not found', async () => {
+      prisma.partner.findUnique.mockResolvedValue(null);
+      await expect(service.update('nope', {} as any)).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+  });
+
+  describe('remove', () => {
+    it('should delete existing partner', async () => {
+      prisma.partner.findUnique.mockResolvedValue({ id: 'p1' });
+      prisma.partner.delete.mockResolvedValue({ id: 'p1' });
+      const result = await service.remove('p1');
+      expect(prisma.partner.delete).toHaveBeenCalledWith({
+        where: { id: 'p1' },
+      });
+      expect(result).toEqual({ id: 'p1' });
+    });
+
+    it('should throw when partner not found', async () => {
+      prisma.partner.findUnique.mockResolvedValue(null);
+      await expect(service.remove('nope')).rejects.toThrow(NotFoundException);
+    });
+  });
 });
