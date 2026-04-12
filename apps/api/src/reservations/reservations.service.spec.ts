@@ -3,6 +3,7 @@ import { Test } from '@nestjs/testing';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { ReservationsService } from './reservations.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { CheckoutPurgeService } from '../queues/checkout-purge.service';
 
 const mockReservation = {
   id: 'res-1',
@@ -47,6 +48,13 @@ describe('ReservationsService', () => {
       providers: [
         ReservationsService,
         { provide: PrismaService, useValue: prisma },
+        {
+          provide: CheckoutPurgeService,
+          useValue: {
+            scheduleCheckoutPurge: vi.fn(),
+            cancelCheckoutPurge: vi.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -139,6 +147,10 @@ describe('ReservationsService', () => {
           provisioningToken: null,
           provisioningTokenExpiresAt: null,
           deviceId: null,
+          hotspotEnabled: false,
+          hotspotSsid: null,
+          hotspotPassword: null,
+          hotspotDataUsedMb: 0,
         },
       });
       expect(result.status).toBe('CHECKED_OUT');

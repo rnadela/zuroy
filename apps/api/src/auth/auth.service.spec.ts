@@ -4,6 +4,7 @@ import { UnauthorizedException, ConflictException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { AuthService } from './auth.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { JwtBlacklistService } from './jwt-blacklist.service';
 
 vi.mock('bcrypt', () => ({
   default: {
@@ -53,6 +54,7 @@ describe('AuthService', () => {
         AuthService,
         { provide: PrismaService, useValue: prisma },
         { provide: JwtService, useValue: jwtService },
+        { provide: JwtBlacklistService, useValue: { blacklist: vi.fn() } },
       ],
     }).compile();
 
@@ -77,14 +79,17 @@ describe('AuthService', () => {
           firstName: 'John',
           lastName: 'Doe',
           role: 'HOTEL_STAFF',
+          hotelId: 'hotel-1',
         },
       });
-      expect(jwtService.sign).toHaveBeenCalledWith({
-        sub: 'user-1',
-        email: 'test@example.com',
-        role: 'HOTEL_STAFF',
-        hotelId: 'hotel-1',
-      });
+      expect(jwtService.sign).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sub: 'user-1',
+          email: 'test@example.com',
+          role: 'HOTEL_STAFF',
+          hotelId: 'hotel-1',
+        }),
+      );
     });
 
     it('should throw UnauthorizedException for wrong password', async () => {

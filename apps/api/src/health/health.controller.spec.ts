@@ -1,7 +1,8 @@
 import { Test } from '@nestjs/testing';
 import { HealthController } from './health.controller';
-import { HealthCheckService, TerminusModule } from '@nestjs/terminus';
+import { TerminusModule } from '@nestjs/terminus';
 import { PrismaHealthIndicator } from './prisma-health.indicator';
+import { RedisHealthIndicator } from './redis-health.indicator';
 import { PrismaService } from '../prisma/prisma.service';
 
 describe('HealthController', () => {
@@ -12,7 +13,20 @@ describe('HealthController', () => {
       imports: [TerminusModule],
       controllers: [HealthController],
       providers: [
-        PrismaHealthIndicator,
+        {
+          provide: PrismaHealthIndicator,
+          useValue: {
+            isHealthy: vi
+              .fn()
+              .mockResolvedValue({ database: { status: 'up' } }),
+          },
+        },
+        {
+          provide: RedisHealthIndicator,
+          useValue: {
+            isHealthy: vi.fn().mockResolvedValue({ redis: { status: 'up' } }),
+          },
+        },
         {
           provide: PrismaService,
           useValue: { $queryRaw: vi.fn().mockResolvedValue([{ 1: 1 }]) },
